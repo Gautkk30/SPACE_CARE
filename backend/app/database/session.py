@@ -56,6 +56,56 @@ DEMO_ASTRONAUT = {
     "is_demo": True,
 }
 
+# The four full fictional demonstration astronaut profiles
+ALL_DEMO_ASTRONAUTS = [
+    {
+        "id": "astro_01",
+        "name": "Commander Elena Rostova",
+        "role": "Mission Commander",
+        "age": 44,
+        "gender": "Female",
+        "mission": "Artemis Lunar Transit",
+        "baseline_heart_rate": 64.0,
+        "baseline_systolic_bp": 116.0,
+        "baseline_diastolic_bp": 74.0,
+        "baseline_spo2": 98.4,
+        "baseline_body_temperature": 36.8,
+        "baseline_respiration_rate": 14.0,
+        "is_demo": True,
+    },
+    {
+        "id": "astro_02",
+        "name": "Marcus Vance",
+        "role": "Systems Officer",
+        "age": 39,
+        "gender": "Male",
+        "mission": "Artemis Lunar Transit",
+        "baseline_heart_rate": 68.0,
+        "baseline_systolic_bp": 120.0,
+        "baseline_diastolic_bp": 78.0,
+        "baseline_spo2": 98.0,
+        "baseline_body_temperature": 36.9,
+        "baseline_respiration_rate": 14.0,
+        "is_demo": True,
+    },
+    DEMO_ASTRONAUT,
+    {
+        "id": "astro_04",
+        "name": "Dr. Sarah Lin",
+        "role": "Payload Specialist",
+        "age": 34,
+        "gender": "Female",
+        "mission": "Artemis Lunar Transit",
+        "baseline_heart_rate": 62.0,
+        "baseline_systolic_bp": 112.0,
+        "baseline_diastolic_bp": 70.0,
+        "baseline_spo2": 99.0,
+        "baseline_body_temperature": 36.8,
+        "baseline_respiration_rate": 14.0,
+        "is_demo": True,
+    },
+]
+
 
 def get_db() -> Generator[Session, None, None]:
     """
@@ -86,6 +136,45 @@ def seed_demo_astronaut(db_session: Session) -> bool:
         db_session.commit()
         return True
     return False
+
+
+def seed_all_demo_astronauts(db_session: Session) -> int:
+    """
+    Idempotently seeds all four fictional demonstration astronaut profiles
+    along with their initial baseline qualification telemetry readings.
+    Avoids duplicate records if astronauts are already present.
+    Returns the count of newly seeded astronauts.
+    """
+    from app.models.astronaut import Astronaut
+    from app.models.telemetry import Telemetry
+    from app.models.data_source import DataSource
+
+    newly_seeded = 0
+    for astro_dict in ALL_DEMO_ASTRONAUTS:
+        stmt = select(Astronaut).where(Astronaut.id == astro_dict["id"])
+        existing = db_session.execute(stmt).scalar_one_or_none()
+
+        if existing is None:
+            db_session.add(Astronaut(**astro_dict))
+            newly_seeded += 1
+            # Add an initial baseline qualification telemetry reading
+            db_session.add(Telemetry(
+                astronaut_id=astro_dict["id"],
+                heart_rate=astro_dict["baseline_heart_rate"],
+                systolic_bp=astro_dict["baseline_systolic_bp"],
+                diastolic_bp=astro_dict["baseline_diastolic_bp"],
+                spo2=astro_dict["baseline_spo2"],
+                body_temperature=astro_dict["baseline_body_temperature"],
+                respiration_rate=astro_dict["baseline_respiration_rate"],
+                data_source=DataSource.SYNTHETIC_SIMULATED.value,
+                is_simulated=True,
+                dataset_reference="Pre-flight baseline qualification calibration",
+                timestamp=datetime.now(timezone.utc),
+            ))
+
+    if newly_seeded > 0:
+        db_session.commit()
+    return newly_seeded
 
 
 def init_db(target_engine=None) -> None:

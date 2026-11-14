@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.database.session import init_db
+from app.database.session import init_db, SessionLocal, seed_all_demo_astronauts
 from app.api.api import api_router
 from app.api.routes import research, health, radiation
 
@@ -23,6 +23,8 @@ from app.api.routes import research, health, radiation
 async def lifespan(app: FastAPI):
     # Initialize database on startup
     init_db()
+    with SessionLocal() as session:
+        seed_all_demo_astronauts(session)
     yield
 
 
