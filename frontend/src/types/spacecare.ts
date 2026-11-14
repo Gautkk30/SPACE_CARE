@@ -51,6 +51,120 @@ export interface TelemetryReading {
   dataset_reference?: string | null;
 }
 
+/**
+ * Backend Pydantic Schemas matching backend/app/schemas/*
+ */
+
+export interface AstronautResponse {
+  id: string;
+  name: string;
+  role: string;
+  age: number;
+  gender: string;
+  mission: string;
+  is_demo: boolean;
+  baseline_heart_rate: number;
+  baseline_systolic_bp: number;
+  baseline_diastolic_bp: number;
+  baseline_spo2: number;
+  baseline_body_temperature: number;
+  baseline_respiration_rate: number;
+  created_at: string;
+}
+
+export interface TelemetryCreate {
+  astronaut_id: string;
+  timestamp?: string | null;
+  heart_rate: number;
+  systolic_bp: number;
+  diastolic_bp: number;
+  spo2: number;
+  body_temperature: number;
+  respiration_rate: number;
+  data_source?: DataSourceType;
+  is_simulated?: boolean;
+  dataset_reference?: string | null;
+  // Optional multi-hazard auxiliary streams
+  dose_rate?: number | null;
+  cumulative_exposure?: number | null;
+  sleep_duration?: number | null;
+  cumulative_sleep_debt?: number | null;
+  workload_score?: number | null;
+  mood_score?: number | null;
+  communication_latency_seconds?: number | null;
+  exercise_deficit_daily?: number | null;
+  cabin_pressure_kpa?: number | null;
+  o2_partial_pressure_kpa?: number | null;
+  co2_partial_pressure_kpa?: number | null;
+  pressure_drop_rate?: number | null;
+  cabin_temperature?: number | null;
+}
+
+export interface TelemetryResponse {
+  id: number;
+  astronaut_id: string;
+  timestamp: string;
+  heart_rate: number;
+  systolic_bp: number;
+  diastolic_bp: number;
+  spo2: number;
+  body_temperature: number;
+  respiration_rate: number;
+  data_source: string;
+  is_simulated: boolean;
+  dataset_reference?: string | null;
+  created_at: string;
+}
+
+export interface HeuristicExplanation {
+  feature: string;
+  robust_z_score: number;
+  direction: 'elevated' | 'depressed' | string;
+  observed_value: number;
+  training_median: number;
+  heuristic_explanation: string;
+  attribution_type?: string;
+}
+
+export interface AssessmentSummaryResponse {
+  overall_status: 'NOMINAL' | 'ELEVATED_RISK' | 'CRITICAL_RISK' | 'DATA_QUALITY_ISSUE' | string;
+  physiological_status: string;
+  highest_severity: 'INFO' | 'WARNING' | 'CRITICAL' | string;
+  primary_hazard: string;
+  assessed_domains: string[];
+  unmonitored_domains: string[];
+  evidence_status: string;
+  overall_evidence_status: string;
+  ml_anomaly_detected: boolean;
+  ml_anomaly_score: number;
+  heuristic_explanations: HeuristicExplanation[];
+  alerts_created_count: number;
+  new_alert_ids: string[];
+  active_open_alert_ids: string[];
+}
+
+export interface TelemetryIngestResponse {
+  telemetry: TelemetryResponse;
+  assessment_summary: AssessmentSummaryResponse;
+}
+
+export interface AlertResponse {
+  id: string;
+  astronaut_id: string;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL' | string;
+  category: string;
+  message: string;
+  recommendation: string;
+  is_acknowledged: boolean;
+  timestamp: string;
+  created_at: string;
+}
+
+export interface AlertAcknowledgeResponse {
+  alert: AlertResponse;
+  status: string;
+}
+
 export interface AstronautBaseline {
   restingHeartRate: number; // bpm
   maxHeartRateNominal: number; // bpm
@@ -301,6 +415,52 @@ export interface HealthAlert {
   confidence_score?: number;
   recommendation?: string;
   is_acknowledged?: boolean;
+}
+
+export function convertAlertResponseToHealthAlert(
+  res: AlertResponse,
+  crewMap: Record<string, { name: string }> = {}
+): HealthAlert {
+  const astro = crewMap[res.astronaut_id];
+  const astroName = astro ? astro.name : res.astronaut_id;
+
+  const sevUpper = (res.severity || '').toUpperCase();
+  const severity: AlertSeverity =
+    sevUpper === 'CRITICAL' ? 'CRITICAL' : sevUpper === 'INFO' ? 'INFO' : 'CAUTION';
+
+  let category: HealthCategory = 'CARDIOVASCULAR';
+  const catUpper = (res.category || '').toUpperCase();
+  if (catUpper.includes('RADIATION')) category = 'RADIATION';
+  else if (catUpper.includes('GRAVITY') || catUpper.includes('MUSCLE') || catUpper.includes('BONE')) category = 'MUSCULOSKELETAL';
+  else if (catUpper.includes('ISOLATION') || catUpper.includes('SLEEP') || catUpper.includes('PSYCH')) category = 'SLEEP_PSYCH';
+  else if (catUpper.includes('ENVIRONMENT') || catUpper.includes('HOSTILE') || catUpper.includes('ATMOSPHERE')) category = 'ENVIRONMENTAL';
+  else if (catUpper.includes('RESPIRAT') || catUpper.includes('HYPOXIA')) category = 'RESPIRATORY';
+  else if (catUpper.includes('VITALS')) category = 'VITALS';
+
+  const status: AlertStatus = res.is_acknowledged ? 'ACKNOWLEDGED' : 'ACTIVE';
+
+  return {
+    id: res.id,
+    astronautId: res.astronaut_id,
+    astronautName: astroName,
+    category,
+    severity,
+    status,
+    title: res.message.split('.')[0] || `${res.severity} Alert: ${res.category}`,
+    whatIsChanging: res.message,
+    whyItMatters: 'Biometric threshold or multi-hazard rule violation recorded by mission monitoring.',
+    physiologicalExplanation: res.message,
+    countermeasure: res.recommendation,
+    suggestedFurtherAssessment: 'Verify auxiliary sensor telemetry and execute onboard clinical protocol.',
+    evidenceReference: 'NASA HRP Standards & NASA-STD-3001',
+    timestamp: res.timestamp,
+    acknowledged: res.is_acknowledged,
+    astronaut_id: res.astronaut_id,
+    message: res.message,
+    recommendation: res.recommendation,
+    is_acknowledged: res.is_acknowledged,
+    confidence_score: 0.95,
+  };
 }
 
 export interface MissionHealthReport {

@@ -19,6 +19,13 @@ import {
   MissionHealthReport,
   TelemetryReading,
   SimulatedPattern,
+  AstronautResponse,
+  TelemetryCreate,
+  TelemetryResponse,
+  TelemetryIngestResponse,
+  AlertResponse,
+  AlertAcknowledgeResponse,
+  convertAlertResponseToHealthAlert,
 } from '../types/spacecare';
 
 import {
@@ -62,65 +69,57 @@ export interface SimulationResponse {
 const metaEnv = (import.meta as unknown as { env?: Record<string, string> }).env;
 const API_BASE_URL = metaEnv?.VITE_API_BASE_URL || 'http://localhost:8000';
 
-const TIMEOUT_MS = 1500;
+const TIMEOUT_MS = 2000;
 
 class SpacecareApiService {
   private cachedConnectionState: BackendConnectionState | null = null;
 
   /**
    * Determine exact connection status:
-   * 1. GET /api/v1/health -> If fail/unreachable -> OFFLINE_DEMO_FALLBACK
-   * 2. Probe domain endpoint (e.g. GET /api/v1/astronauts) ->
-   *    If 200 -> LIVE_API
-   *    If 404 / 405 -> API_HEALTHY_ROUTES_PENDING
+   * 1. Probe primary domain endpoint GET /api/v1/astronauts ->
+   *    If 200 OK -> Immediately LIVE_API
+   * 2. If 404/405 -> Probe GET /api/v1/health -> If OK -> API_HEALTHY_ROUTES_PENDING
+   * 3. If unreachable / network error -> OFFLINE_DEMO_FALLBACK
    */
   async probeConnection(): Promise<{ state: BackendConnectionState; message: string }> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1000);
+    const timer = setTimeout(() => controller.abort(), 1200);
 
     try {
-      const healthRes = await fetch(`${API_BASE_URL}/api/v1/health`, {
+      // Primary check: Test domain endpoint GET /api/v1/astronauts
+      const domainRes = await fetch(`${API_BASE_URL}/api/v1/astronauts`, {
         signal: controller.signal,
       });
       clearTimeout(timer);
 
-      if (!healthRes.ok) {
-        this.cachedConnectionState = 'OFFLINE_DEMO_FALLBACK';
-        return { state: 'OFFLINE_DEMO_FALLBACK', message: 'Backend health error' };
+      if (domainRes.ok) {
+        this.cachedConnectionState = 'LIVE_API';
+        return { state: 'LIVE_API', message: 'FastAPI connected & verified' };
       }
 
-      // Health endpoint is OK! Now check domain route availability
-      const domainController = new AbortController();
-      const domainTimer = setTimeout(() => domainController.abort(), 1000);
-      try {
-        const domainRes = await fetch(`${API_BASE_URL}/api/v1/astronauts`, {
-          signal: domainController.signal,
-        });
-        clearTimeout(domainTimer);
-
-        if (domainRes.status === 404 || domainRes.status === 405) {
-          this.cachedConnectionState = 'API_HEALTHY_ROUTES_PENDING';
-          return {
-            state: 'API_HEALTHY_ROUTES_PENDING',
-            message: 'FastAPI online • Domain routes pending mount',
-          };
+      if (domainRes.status === 404 || domainRes.status === 405) {
+        // Check if server is alive at /api/v1/health
+        try {
+          const healthController = new AbortController();
+          const healthTimer = setTimeout(() => healthController.abort(), 800);
+          const healthRes = await fetch(`${API_BASE_URL}/api/v1/health`, {
+            signal: healthController.signal,
+          });
+          clearTimeout(healthTimer);
+          if (healthRes.ok) {
+            this.cachedConnectionState = 'API_HEALTHY_ROUTES_PENDING';
+            return {
+              state: 'API_HEALTHY_ROUTES_PENDING',
+              message: 'FastAPI online • Domain routes pending mount',
+            };
+          }
+        } catch {
+          // fall through
         }
-
-        if (domainRes.ok) {
-          this.cachedConnectionState = 'LIVE_API';
-          return { state: 'LIVE_API', message: 'FastAPI connected & verified' };
-        }
-
-        this.cachedConnectionState = 'API_HEALTHY_ROUTES_PENDING';
-        return { state: 'API_HEALTHY_ROUTES_PENDING', message: 'Domain route returned ' + domainRes.status };
-      } catch {
-        clearTimeout(domainTimer);
-        this.cachedConnectionState = 'API_HEALTHY_ROUTES_PENDING';
-        return {
-          state: 'API_HEALTHY_ROUTES_PENDING',
-          message: 'FastAPI online • Domain routes pending mount',
-        };
       }
+
+      this.cachedConnectionState = 'OFFLINE_DEMO_FALLBACK';
+      return { state: 'OFFLINE_DEMO_FALLBACK', message: 'Backend unreachable • Offline Demo Mode' };
     } catch {
       clearTimeout(timer);
       this.cachedConnectionState = 'OFFLINE_DEMO_FALLBACK';
@@ -177,7 +176,6 @@ class SpacecareApiService {
       }
 
       const json = await res.json();
-      // When LIVE_API is active, we return json directly (even if [] or empty object!)
       return {
         data: json as T,
         mode: 'LIVE_API',
@@ -198,34 +196,167 @@ class SpacecareApiService {
     }
   }
 
+  // ==============================================================================
+  // 1. ASTRONAUT ROUTES (backend/app/api/routes/astronauts.py)
+  // ==============================================================================
+
   /**
-   * GET /api/v1/astronauts (also falls back to /api/v1/crew if alias exists)
+   * GET /api/v1/astronauts
+   * Retrieves a paginated list of astronaut profiles from SQLite.
    */
-  async getAstronauts(): Promise<ApiResponse<AstronautProfile[]>> {
-    return this.request<AstronautProfile[]>('/api/v1/astronauts', {}, MOCK_ASTRONAUTS);
+  async getAstronauts(skip: number = 0, limit: number = 100): Promise<ApiResponse<AstronautResponse[]>> {
+    return this.request<AstronautResponse[]>(
+      `/api/v1/astronauts?skip=${skip}&limit=${limit}`,
+      {},
+      MOCK_ASTRONAUTS as unknown as AstronautResponse[]
+    );
   }
 
   /**
-   * Alias for backwards compatibility
+   * Backward-compatible alias for getAstronauts
    */
   async getCrew(): Promise<ApiResponse<AstronautProfile[]>> {
-    return this.getAstronauts();
+    const res = await this.getAstronauts();
+    if (res.mode === 'LIVE_API' && Array.isArray(res.data) && res.data.length > 0) {
+      // Merge SQLite attributes with existing rich UI profiles if matching
+      const mappedCrew: AstronautProfile[] = res.data.map((dbAstro) => {
+        const existing = MOCK_ASTRONAUTS.find((m) => m.id === dbAstro.id) || MOCK_ASTRONAUTS[0];
+        return {
+          ...existing,
+          id: dbAstro.id,
+          name: dbAstro.name,
+          role: dbAstro.role,
+          age: dbAstro.age,
+          gender: dbAstro.gender,
+          mission: dbAstro.mission,
+          is_demo: dbAstro.is_demo,
+          baseline_heart_rate: dbAstro.baseline_heart_rate,
+          baseline_systolic_bp: dbAstro.baseline_systolic_bp,
+          baseline_diastolic_bp: dbAstro.baseline_diastolic_bp,
+          baseline_spo2: dbAstro.baseline_spo2,
+          baseline_body_temperature: dbAstro.baseline_body_temperature,
+          baseline_respiration_rate: dbAstro.baseline_respiration_rate,
+        };
+      });
+      return {
+        ...res,
+        data: mappedCrew,
+      };
+    }
+    return {
+      ...res,
+      data: MOCK_ASTRONAUTS,
+    };
   }
 
   /**
-   * GET /api/v1/astronauts/{id}
+   * GET /api/v1/astronauts/{astronaut_id}
    */
-  async getAstronaut(id: string): Promise<ApiResponse<AstronautProfile>> {
-    const defaultAstro = MOCK_ASTRONAUTS.find((a) => a.id === id) || MOCK_ASTRONAUTS[0];
-    return this.request<AstronautProfile>(`/api/v1/astronauts/${id}`, {}, defaultAstro);
+  async getAstronaut(astronautId: string): Promise<ApiResponse<AstronautResponse>> {
+    const defaultAstro = (MOCK_ASTRONAUTS.find((a) => a.id === astronautId) || MOCK_ASTRONAUTS[0]) as unknown as AstronautResponse;
+    return this.request<AstronautResponse>(`/api/v1/astronauts/${astronautId}`, {}, defaultAstro);
   }
 
   /**
-   * GET /api/v1/telemetry?astronaut_id={id}&limit={limit}
+   * GET /api/v1/astronauts/{astronaut_id}/telemetry
+   * Retrieves chronological telemetry history for an astronaut, ordered newest first.
    */
-  async getTelemetry(astronautId?: string, limit: number = 100): Promise<ApiResponse<TelemetryReading[]>> {
-    const query = astronautId ? `?astronaut_id=${encodeURIComponent(astronautId)}&limit=${limit}` : `?limit=${limit}`;
-    return this.request<TelemetryReading[]>(`/api/v1/telemetry${query}`, {}, []);
+  async getAstronautTelemetry(
+    astronautId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<ApiResponse<TelemetryResponse[]>> {
+    return this.request<TelemetryResponse[]>(
+      `/api/v1/astronauts/${astronautId}/telemetry?limit=${limit}&offset=${offset}`,
+      {},
+      []
+    );
+  }
+
+  /**
+   * GET /api/v1/astronauts/{astronaut_id}/alerts
+   * Retrieves alerts for an astronaut, with optional filtering by acknowledgment and severity.
+   */
+  async getAstronautAlerts(
+    astronautId: string,
+    isAcknowledged?: boolean,
+    severity?: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<ApiResponse<AlertResponse[]>> {
+    const params = new URLSearchParams();
+    if (isAcknowledged !== undefined) params.append('is_acknowledged', String(isAcknowledged));
+    if (severity) params.append('severity', severity);
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+
+    return this.request<AlertResponse[]>(
+      `/api/v1/astronauts/${astronautId}/alerts?${params.toString()}`,
+      {},
+      []
+    );
+  }
+
+  // ==============================================================================
+  // 2. TELEMETRY INGESTION (backend/app/api/routes/telemetry.py)
+  // ==============================================================================
+
+  /**
+   * POST /api/v1/telemetry
+   * Validates physiological bounds and data provenance, persists reading to SQLite,
+   * executes multi-hazard risk engine & Isolation Forest anomaly detection,
+   * deduplicates resulting alerts, and returns the saved telemetry and assessment summary.
+   */
+  async submitTelemetryReading(reading: TelemetryCreate): Promise<ApiResponse<TelemetryIngestResponse>> {
+    // Validate provenance consistency matching backend model validator
+    const isSimulated = reading.data_source === 'SYNTHETIC_SIMULATED' ? true : false;
+    const payload: TelemetryCreate = {
+      ...reading,
+      is_simulated: isSimulated,
+    };
+
+    const fallbackResponse: TelemetryIngestResponse = {
+      telemetry: {
+        id: Date.now(),
+        astronaut_id: reading.astronaut_id,
+        timestamp: reading.timestamp || new Date().toISOString(),
+        heart_rate: reading.heart_rate,
+        systolic_bp: reading.systolic_bp,
+        diastolic_bp: reading.diastolic_bp,
+        spo2: reading.spo2,
+        body_temperature: reading.body_temperature,
+        respiration_rate: reading.respiration_rate,
+        data_source: reading.data_source || 'SYNTHETIC_SIMULATED',
+        is_simulated: isSimulated,
+        dataset_reference: reading.dataset_reference || null,
+        created_at: new Date().toISOString(),
+      },
+      assessment_summary: {
+        overall_status: 'NOMINAL',
+        physiological_status: 'NOMINAL',
+        highest_severity: 'INFO',
+        primary_hazard: 'PHYSIOLOGICAL',
+        assessed_domains: ['PHYSIOLOGICAL'],
+        unmonitored_domains: [],
+        evidence_status: 'NOMINAL',
+        overall_evidence_status: 'COMPLETE_MULTI_HAZARD',
+        ml_anomaly_detected: false,
+        ml_anomaly_score: -0.15,
+        heuristic_explanations: [],
+        alerts_created_count: 0,
+        new_alert_ids: [],
+        active_open_alert_ids: [],
+      },
+    };
+
+    return this.request<TelemetryIngestResponse>(
+      '/api/v1/telemetry',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      fallbackResponse
+    );
   }
 
   /**
@@ -234,7 +365,7 @@ class SpacecareApiService {
    */
   async simulateTelemetry(payload: SimulationRequest): Promise<ApiResponse<SimulationResponse>> {
     const fallbackResponse: SimulationResponse = {
-      message: `[Preview] Simulated ${payload.count} records for ${payload.astronaut_id} (${payload.pattern}). Backend route /api/v1/telemetry/simulate pending.`,
+      message: `[Preview] Simulated ${payload.count} records for ${payload.astronaut_id} (${payload.pattern}).`,
       records_generated: payload.count,
       astronaut_id: payload.astronaut_id,
       pattern: payload.pattern,
@@ -250,45 +381,88 @@ class SpacecareApiService {
     );
   }
 
+  // ==============================================================================
+  // 3. ALERTS ROUTES (backend/app/api/routes/alerts.py)
+  // ==============================================================================
+
   /**
-   * POST /api/v1/telemetry
-   * Submits a single telemetry reading matching the backend Telemetry model.
+   * PATCH /api/v1/alerts/{alert_id}/acknowledge
+   * Marks an alert as acknowledged in SQLite by setting is_acknowledged=True.
    */
-  async submitTelemetryReading(reading: Omit<TelemetryReading, 'id'>): Promise<ApiResponse<TelemetryReading>> {
-    const fallbackReading: TelemetryReading = {
-      id: Date.now(),
-      ...reading,
+  async acknowledgeAlert(alertId: string): Promise<ApiResponse<AlertAcknowledgeResponse>> {
+    const fallbackResponse: AlertAcknowledgeResponse = {
+      alert: {
+        id: alertId,
+        astronaut_id: 'astro_03',
+        severity: 'INFO',
+        category: 'PHYSIOLOGICAL',
+        message: 'Alert acknowledged',
+        recommendation: 'Continue monitoring',
+        is_acknowledged: true,
+        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      },
+      status: 'acknowledged',
     };
 
-    return this.request<TelemetryReading>(
-      '/api/v1/telemetry',
-      {
-        method: 'POST',
-        body: JSON.stringify(reading),
-      },
-      fallbackReading
-    );
-  }
-
-  /**
-   * GET /api/v1/alerts
-   */
-  async getAlerts(astronautId?: string): Promise<ApiResponse<HealthAlert[]>> {
-    const query = astronautId ? `?astronaut_id=${encodeURIComponent(astronautId)}` : '';
-    return this.request<HealthAlert[]>(`/api/v1/alerts${query}`, {}, MOCK_ALERTS);
-  }
-
-  /**
-   * PATCH /api/v1/alerts/{id}/acknowledge
-   */
-  async acknowledgeAlert(alertId: string): Promise<ApiResponse<{ acknowledged: boolean; alert_id: string }>> {
-    const fallbackResponse = { acknowledged: true, alert_id: alertId };
-    return this.request<{ acknowledged: boolean; alert_id: string }>(
+    return this.request<AlertAcknowledgeResponse>(
       `/api/v1/alerts/${alertId}/acknowledge`,
       { method: 'PATCH' },
       fallbackResponse
     );
   }
+
+  /**
+   * Query all alerts across crew members (aggregates GET /api/v1/astronauts/{id}/alerts)
+   */
+  async getAlerts(astronautId?: string): Promise<ApiResponse<HealthAlert[]>> {
+    if (astronautId) {
+      const res = await this.getAstronautAlerts(astronautId);
+      const mapped = (res.data || []).map((a) => convertAlertResponseToHealthAlert(a, {}));
+      return {
+        data: mapped.length > 0 ? mapped : MOCK_ALERTS.filter((m) => m.astronautId === astronautId),
+        mode: res.mode,
+        error: res.error,
+      };
+    }
+
+    const crewIds = ['astro_01', 'astro_02', 'astro_03', 'astro_04'];
+    try {
+      const allResults = await Promise.all(crewIds.map((id) => this.getAstronautAlerts(id)));
+      const anyLive = allResults.some((r) => r.mode === 'LIVE_API');
+      const mergedAlerts = allResults.flatMap((r) => r.data || []);
+      if (anyLive && mergedAlerts.length > 0) {
+        return {
+          data: mergedAlerts.map((a) => convertAlertResponseToHealthAlert(a, {})),
+          mode: 'LIVE_API',
+        };
+      }
+    } catch {
+      // fallback
+    }
+
+    return {
+      data: MOCK_ALERTS,
+      mode: this.cachedConnectionState || 'OFFLINE_DEMO_FALLBACK',
+    };
+  }
+
+  /**
+   * Helper alias to fetch historical telemetry
+   */
+  async getTelemetry(astronautId?: string, limit: number = 50): Promise<ApiResponse<TelemetryReading[]>> {
+    const id = astronautId || 'astro_03';
+    const res = await this.getAstronautTelemetry(id, limit);
+    return {
+      data: (res.data || []) as TelemetryReading[],
+      mode: res.mode,
+      error: res.error,
+    };
+  }
+
+  // ==============================================================================
+  // 4. AUXILIARY / ANALYTICS DEMO ROUTES
+  // ==============================================================================
 
   /**
    * GET /api/v1/radiation

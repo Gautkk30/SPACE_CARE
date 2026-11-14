@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AstronautProfile } from '../types/spacecare';
+import { useTelemetry } from '../context/TelemetryContext';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -76,8 +77,10 @@ const DarkFeatureTooltip = ({ active, payload }: CustomTooltipProps) => {
 };
 
 export const AIAnalysisPage = ({ selectedAstronaut }: AIAnalysisPageProps) => {
+  const { backendMode, latestAssessmentByAstronaut } = useTelemetry();
   const [activeTab, setActiveTab] = useState<'timeline' | 'features'>('timeline');
   const { aiAnalysis, name, callsign } = selectedAstronaut;
+  const liveAssessment = latestAssessmentByAstronaut[selectedAstronaut.id];
 
   const isAnomalous = aiAnalysis.compositeAnomalyScore >= aiAnalysis.anomalyThreshold;
 
@@ -102,9 +105,60 @@ export const AIAnalysisPage = ({ selectedAstronaut }: AIAnalysisPageProps) => {
         <div className="flex items-center gap-2 bg-space-panel border border-space-border rounded-lg px-3 py-1.5 text-xs font-mono">
           <Sparkles className="w-3.5 h-3.5 text-space-cyan" />
           <span className="text-space-dim">Engine:</span>
-          <span className="text-space-cyan font-medium">ISOLATION FOREST • PROTOTYPE</span>
+          <span className="text-space-cyan font-medium">
+            {backendMode === 'LIVE_API'
+              ? 'FASTAPI ISOLATION FOREST • LIVE SQLITE'
+              : 'ISOLATION FOREST • PROTOTYPE'}
+          </span>
         </div>
       </div>
+
+      {/* Member 3 Multi-Hazard Live Inference Banner */}
+      {backendMode === 'LIVE_API' && liveAssessment && (
+        <div className="bg-space-panel/90 border border-space-cyan/40 rounded-xl p-4 shadow-lg text-xs font-mono space-y-2">
+          <div className="flex items-center justify-between pb-2 border-b border-space-border/60">
+            <span className="text-space-cyan font-bold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-space-cyan" />
+              Member 3 Multi-Hazard Risk &amp; Isolation Forest Live Inference
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                liveAssessment.overall_status === 'CRITICAL_RISK'
+                  ? 'bg-space-red-muted text-space-red border border-space-red/40 animate-pulse'
+                  : liveAssessment.overall_status === 'ELEVATED_RISK'
+                  ? 'bg-space-amber-muted text-space-amber border border-space-amber/40'
+                  : 'bg-space-emerald-muted text-space-emerald border border-space-emerald/40'
+              }`}
+            >
+              {liveAssessment.overall_status}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px] pt-1">
+            <div>
+              <span className="text-space-dim block">Isolation Score:</span>
+              <span className="text-space-text font-bold">{liveAssessment.ml_anomaly_score}</span>
+              <span className="text-[10px] text-space-dim block mt-0.5">(-decision_function)</span>
+            </div>
+            <div>
+              <span className="text-space-dim block">Primary Hazard:</span>
+              <span className="text-space-cyan font-bold">{liveAssessment.primary_hazard}</span>
+              <span className="text-[10px] text-space-dim block mt-0.5">Highest: {liveAssessment.highest_severity}</span>
+            </div>
+            <div>
+              <span className="text-space-dim block">Assessed Domains:</span>
+              <span className="text-space-text font-bold truncate block">
+                {liveAssessment.assessed_domains.join(', ')}
+              </span>
+              <span className="text-[10px] text-space-dim block mt-0.5">Evidence: {liveAssessment.evidence_status}</span>
+            </div>
+            <div>
+              <span className="text-space-dim block">Active Open Alerts:</span>
+              <span className="text-space-amber font-bold">{liveAssessment.active_open_alert_ids.length} Alerts</span>
+              <span className="text-[10px] text-space-dim block mt-0.5">+{liveAssessment.alerts_created_count} New</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
