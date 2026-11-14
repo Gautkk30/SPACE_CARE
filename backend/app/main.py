@@ -2,36 +2,20 @@
 """
 SPACECARE Backend Application Entry Point
 NASA Space Apps Challenge 2026
-"""
 
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-import os
+This module initializes the FastAPI application, registers middleware,
+and provides baseline health check and metadata endpoints.
+"""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone
+import os
 
-from app.api.routes import research, health,radiation
-
-from app.database.connection import Base, engine
-
-# Import models so SQLAlchemy registers their tables.
-from app.models.health import HealthReading
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Initialize database tables at application startup.
-    Base.metadata.create_all(bind=engine)
-    print("SPACECARE database initialized successfully.")
-
-    yield
-
-    print("SPACECARE backend shutting down.")
-
+from app.api.routes import research,health
 
 app = FastAPI(
-    title="SPACECARE API",
+    title=settings.PROJECT_NAME,
     description="Intelligent Astronaut Health Monitoring & Early Warning System",
     version="0.1.0",
     docs_url="/docs",
@@ -67,33 +51,20 @@ async def root():
     }
 
 
-@app.get("/api/v1/health", tags=["Health"])
+@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
 async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "database": "initialized",
+        "database": "uninitialized (ready for migration)",
         "version": "0.1.0"
     }
 
-
-# Register API routes.
-app.include_router(
-    research.router,
-    prefix="/api/v1/research",
-    tags=["Research"]
-)
-
-app.include_router(
-    health.router,
-    prefix="/api/v1/vitals",
-    tags=["Vitals"]
-)
-app.include_router(
-    radiation.router,
-    prefix="/api/v1/radiation",
-    tags=["Radiation"]
-)
+# ==============================================================================
+# Route registrations:
+# ==============================================================================
+app.include_router(research.router, prefix="/api/v1/research", tags=["Research"])
+app.include_router(health.router, prefix="/api/v1/vitals", tags=["Vitals"])
 
 if __name__ == "__main__":
     import uvicorn
