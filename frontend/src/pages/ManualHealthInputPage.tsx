@@ -212,15 +212,95 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
     setIsSubmitting(true);
     setBackendFeedback(null);
 
+    const hr = parseFloat(vitals.heartRate);
+    const sys = parseFloat(vitals.systolicBP);
+    const dia = parseFloat(vitals.diastolicBP);
+    const spo2 = parseFloat(vitals.spo2);
+    const temp = parseFloat(vitals.bodyTemperature);
+    const rr = parseFloat(vitals.respirationRate);
+
+    // Client-side numerical & biological validation guards
+    if (isNaN(hr) || isNaN(sys) || isNaN(dia) || isNaN(spo2) || isNaN(temp) || isNaN(rr)) {
+      setBackendFeedback({
+        success: false,
+        message: 'Validation error: All vital signs must be valid numbers.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (sys <= dia) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Systolic BP (${sys} mmHg) must be strictly greater than Diastolic BP (${dia} mmHg).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (hr < 25 || hr > 240) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Heart rate (${hr} bpm) is outside plausible limits (25 - 240 bpm).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (sys < 50 || sys > 250) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Systolic BP (${sys} mmHg) is outside plausible limits (50 - 250 mmHg).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (dia < 30 || dia > 150) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Diastolic BP (${dia} mmHg) is outside plausible limits (30 - 150 mmHg).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (spo2 < 60 || spo2 > 100) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: SpO2 (${spo2}%) must be between 60.0% and 100.0%.`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (temp < 32.0 || temp > 43.0) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Body temperature (${temp}°C) is outside plausible biological limits (32.0 - 43.0°C).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (rr < 4 || rr > 55) {
+      setBackendFeedback({
+        success: false,
+        message: `Validation error: Respiration rate (${rr} br/min) is outside plausible limits (4 - 55 br/min).`,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     const readingPayload: Omit<TelemetryReading, 'id'> = {
       astronaut_id: currentAstronaut.id,
       timestamp: new Date(timestamp).toISOString(),
-      heart_rate: parsedVitals.heartRate,
-      systolic_bp: parsedVitals.systolicBP,
-      diastolic_bp: parsedVitals.diastolicBP,
-      spo2: parsedVitals.spo2,
-      body_temperature: parsedVitals.bodyTemperature,
-      respiration_rate: parsedVitals.respirationRate,
+      heart_rate: hr,
+      systolic_bp: sys,
+      diastolic_bp: dia,
+      spo2: spo2,
+      body_temperature: temp,
+      respiration_rate: rr,
       data_source: dataSource,
       is_simulated: dataSource !== 'SENSOR_LIVE',
       dataset_reference: datasetReference.trim() || undefined,
@@ -262,10 +342,11 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
           reading: fullReading,
         });
       }
-    } catch {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Telemetry submission failed. Please verify input fields.';
       setBackendFeedback({
         success: false,
-        message: 'Telemetry submission failed. Please verify input fields.',
+        message: errorMsg,
       });
     } finally {
       setIsSubmitting(false);

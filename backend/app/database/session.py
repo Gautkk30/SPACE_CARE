@@ -13,16 +13,21 @@ from app.core.config import settings
 # SQLite configuration
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False, "timeout": 30},
     echo=False
 )
 
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    """Enable foreign key constraints for SQLite connections."""
+    """Enable foreign key constraints, busy timeout, and WAL journal mode for SQLite."""
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA busy_timeout=30000")
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass
     cursor.close()
 
 

@@ -84,9 +84,25 @@ export const VitalSignsPage = ({
   const [simResult, setSimResult] = useState<{ message: string; isPending?: boolean } | null>(null);
 
   const trendData: VitalTrendPoint[] =
-    selectedAstronaut.trendsByWindow[timeWindow] || selectedAstronaut.trend24h;
+    selectedAstronaut?.trendsByWindow?.[timeWindow] || selectedAstronaut?.trend24h || [];
 
-  const { baseline, currentVitals } = selectedAstronaut;
+  const baseline = selectedAstronaut?.baseline || {
+    restingHeartRate: 72,
+    restingSystolicBP: 120,
+    restingDiastolicBP: 78,
+    baselineSpO2: 98.2,
+    baselineCoreTemp: 36.8,
+    baselineRespirationRate: 14,
+  };
+
+  const currentVitals = selectedAstronaut?.currentVitals || {
+    heartRate: 72,
+    systolicBP: 120,
+    diastolicBP: 78,
+    spo2: 98.2,
+    coreTemp: 36.8,
+    respiratoryRate: 14,
+  };
 
   const handleTriggerSimulation = async () => {
     setIsSimulating(true);

@@ -61,10 +61,35 @@ const DarkCardioTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export const CardiovascularPage = ({ selectedAstronaut }: CardiovascularPageProps) => {
   const [activeChartMetric, setActiveChartMetric] = useState<'hr_map' | 'orthostatic'>('hr_map');
-  const { cardiovascular, baseline, name, callsign } = selectedAstronaut;
+  const cardiovascular = selectedAstronaut?.cardiovascular || {
+    restingHrDrift: 4,
+    meanArterialPressure: 93,
+    pulsePressure: 42,
+    strokeVolumeIndex: 44,
+    orthostaticToleranceScore: 82,
+    fluidShiftSeverity: 'Nominal' as const,
+    jugularVenousDistension: false,
+    cardiacWorkloadIndex: 7800,
+    dailyDriftHistory: [],
+    referenceStandards: {
+      orthostaticAlertThreshold: 65,
+      mapNominalMin: 70,
+      mapNominalMax: 105,
+    },
+  };
+  const baseline = selectedAstronaut?.baseline || {
+    restingHeartRate: 72,
+    restingSystolicBP: 120,
+    restingDiastolicBP: 78,
+    baselineSpO2: 98.2,
+    baselineCoreTemp: 36.8,
+    baselineRespirationRate: 14,
+  };
+  const name = selectedAstronaut?.name || 'Astronaut';
+  const callsign = selectedAstronaut?.callsign || 'CREW';
 
-  const isDriftHigh = cardiovascular.restingHrDrift > 10;
-  const isOrthoVulnerable = cardiovascular.orthostaticToleranceScore < cardiovascular.referenceStandards.orthostaticAlertThreshold;
+  const isDriftHigh = (cardiovascular.restingHrDrift ?? 0) > 10;
+  const isOrthoVulnerable = (cardiovascular.orthostaticToleranceScore ?? 100) < (cardiovascular.referenceStandards?.orthostaticAlertThreshold ?? 65);
 
   return (
     <div className="space-y-6">

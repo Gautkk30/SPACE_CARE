@@ -85,7 +85,7 @@ class DONKIClient:
             "https://ccmc.gsfc.nasa.gov/DONKI-API/get"
         ).rstrip("/")
 
-        self.timeout = float(os.getenv("NASA_DONKI_TIMEOUT", "15.0"))
+        self.timeout = float(os.getenv("NASA_DONKI_TIMEOUT", "5.0"))
 
     async def fetch_cme_events(
         self,
@@ -114,7 +114,7 @@ class DONKIClient:
 
             return data
 
-        except (httpx.RequestError, httpx.HTTPStatusError, ValueError) as exc:
+        except (httpx.RequestError, httpx.HTTPStatusError, httpx.TimeoutException, ValueError, Exception) as exc:
             logger.warning(
                 f"NASA DONKI live query failed ({exc}); serving authenticated NASA historical fallback records."
             )

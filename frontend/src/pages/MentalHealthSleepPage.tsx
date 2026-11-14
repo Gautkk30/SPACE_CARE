@@ -98,6 +98,7 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
   const [sleepNotes, setSleepNotes] = useState<string>('');
   const [isSubmittingSleep, setIsSubmittingSleep] = useState<boolean>(false);
   const [sleepSuccessMsg, setSleepSuccessMsg] = useState<string>('');
+  const [sleepErrorMsg, setSleepErrorMsg] = useState<string>('');
 
   // Behavioral Check-in Form State
   const [formMood, setFormMood] = useState(4);
@@ -208,6 +209,22 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
   // Submit Sleep Log
   const handleSleepSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSleepErrorMsg('');
+    setSleepSuccessMsg('');
+
+    const hours = Number(sleepHours);
+    const numAwakenings = Number(awakenings);
+
+    if (isNaN(hours) || hours < 0 || hours > 24) {
+      setSleepErrorMsg('Validation error: Sleep duration must be a valid number between 0.0 and 24.0 hours.');
+      return;
+    }
+
+    if (isNaN(numAwakenings) || numAwakenings < 0 || numAwakenings > 50) {
+      setSleepErrorMsg('Validation error: Number of awakenings must be between 0 and 50.');
+      return;
+    }
+
     setIsSubmittingSleep(true);
 
     try {
@@ -215,11 +232,11 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
         {
           astronaut_id: selectedCrewId,
           date: new Date().toISOString().split('T')[0],
-          hours_slept: Number(sleepHours),
+          hours_slept: hours,
           sleep_quality: sleepQuality,
-          awakenings: Number(awakenings),
+          awakenings: numAwakenings,
           coupled_to_vitals: applyVitalsCoupling,
-          notes: sleepNotes.trim() || `Sleep log: ${sleepHours}h (${sleepQuality}) logged via onboard workstation.`,
+          notes: sleepNotes.trim() || `Sleep log: ${hours}h (${sleepQuality}) logged via onboard workstation.`,
           data_source: 'SYNTHETIC_SIMULATED',
         },
         applyVitalsCoupling
@@ -227,12 +244,13 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
 
       setSleepSuccessMsg(
         applyVitalsCoupling
-          ? `Sleep log (${sleepHours}h) recorded & propagated to live vitals, cardiovascular indices, and alert stream!`
-          : `Standalone sleep log (${sleepHours}h) recorded to sleep architecture & actigraphy logs.`
+          ? `Sleep log (${hours}h) recorded & propagated to live vitals, cardiovascular indices, and alert stream!`
+          : `Standalone sleep log (${hours}h) recorded to sleep architecture & actigraphy logs.`
       );
       setTimeout(() => setSleepSuccessMsg(''), 5500);
     } catch (err) {
       console.error('Error logging sleep:', err);
+      setSleepErrorMsg(err instanceof Error ? err.message : 'Failed to record sleep log.');
     } finally {
       setIsSubmittingSleep(false);
     }
@@ -361,6 +379,14 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
           <div className="mb-5 bg-space-emerald-muted border border-space-emerald/40 text-space-emerald rounded-lg p-3 text-xs flex items-center gap-2 font-mono animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span className="font-semibold">{sleepSuccessMsg}</span>
+          </div>
+        )}
+
+        {/* Error Alert Banner */}
+        {sleepErrorMsg && (
+          <div className="mb-5 bg-space-red-muted/40 border border-space-red text-space-red rounded-lg p-3 text-xs flex items-center gap-2 font-mono animate-fadeIn">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{sleepErrorMsg}</span>
           </div>
         )}
 

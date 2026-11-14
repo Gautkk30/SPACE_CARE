@@ -67,9 +67,9 @@ export interface SimulationResponse {
 }
 
 const metaEnv = (import.meta as unknown as { env?: Record<string, string> }).env;
-const API_BASE_URL = metaEnv?.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = metaEnv?.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
-const TIMEOUT_MS = 2000;
+const TIMEOUT_MS = 3000;
 
 class SpacecareApiService {
   private cachedConnectionState: BackendConnectionState | null = null;
@@ -172,7 +172,30 @@ class SpacecareApiService {
       }
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.detail) {
+            if (Array.isArray(errData.detail)) {
+              errorMessage = 'Validation error: ' + errData.detail
+                .map((d: any) => {
+                  const loc = Array.isArray(d.loc)
+                    ? d.loc.filter((p: any) => p !== 'body').join('.')
+                    : (d.loc || '');
+                  const msg = typeof d.msg === 'string' ? d.msg : JSON.stringify(d);
+                  return loc ? `${loc}: ${msg}` : msg;
+                })
+                .join('; ');
+            } else if (typeof errData.detail === 'object') {
+              errorMessage = JSON.stringify(errData.detail);
+            } else {
+              errorMessage = String(errData.detail);
+            }
+          }
+        } catch {
+          // Response body was not JSON or could not be parsed
+        }
+        throw new Error(errorMessage);
       }
 
       const json = await res.json();
