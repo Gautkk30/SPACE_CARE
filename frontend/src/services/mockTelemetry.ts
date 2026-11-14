@@ -16,63 +16,187 @@
  * Simulated values MUST NOT be interpreted as authentic operational astronaut clinical biometrics.
  */
 
-import { AstronautProfile, HealthAlert, MissionSummary, VitalTrendPoint } from '../types/spacecare';
+import {
+  AstronautProfile,
+  HealthAlert,
+  MissionSummary,
+  VitalTrendPoint,
+  CardiovascularMetrics,
+  TimeWindow,
+} from '../types/spacecare';
 
 const CURRENT_ISO = "2026-11-14T10:30:00Z";
 
-// Helper to generate 24 hours of trend data with physiological realism
-function generate24HourTrend(
+// Helper to generate trend data across 6H, 24H, and 7D windows
+function generateTrends(
   baseHr: number,
+  baseHrv: number,
+  baseSys: number,
+  baseDia: number,
   baseSpo2: number,
   baseTemp: number,
   baseResp: number,
-  anomalyConfig?: { hour: number; hrDelta: number; spo2Delta: number }
-): VitalTrendPoint[] {
-  const points: VitalTrendPoint[] = [];
-
-  for (let i = 0; i < 24; i++) {
-    const hour = (i + 11) % 24; // Start 24 hours prior leading up to 10:00
+  anomalyConfig?: { hour: number; hrDelta: number; spo2Delta: number; sysDelta: number }
+): Record<TimeWindow, VitalTrendPoint[]> {
+  // 6-Hour trend (last 6 hours leading up to 10:00 UTC)
+  const trend6h: VitalTrendPoint[] = [];
+  for (let i = 0; i < 6; i++) {
+    const hour = (5 + i);
     const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
-
-    // Circadian variation: lower during sleep (hours 22:00 - 06:00), higher during EVA/exercise (14:00 - 16:00)
-    let hrVariation = Math.sin((i / 24) * 2 * Math.PI) * 6;
-    let spo2Variation = (Math.cos((i / 24) * 2 * Math.PI) * 0.4);
-
-    if (hour >= 23 || hour <= 6) {
-      hrVariation -= 8; // resting/sleep
-    } else if (hour >= 14 && hour <= 16) {
-      hrVariation += 18; // countermeasure exercise window
-      spo2Variation -= 0.6;
-    }
-
-    // Apply specific anomaly injection if configured
-    let anomalyHr = 0;
-    let anomalySpo2 = 0;
-    if (anomalyConfig && hour === anomalyConfig.hour) {
-      anomalyHr = anomalyConfig.hrDelta;
-      anomalySpo2 = anomalyConfig.spo2Delta;
-    }
-
-    const currentHr = Math.round(baseHr + hrVariation + anomalyHr + (Math.random() * 2 - 1));
-    const currentSpo2 = Number((baseSpo2 + spo2Variation + anomalySpo2).toFixed(1));
-    const currentTemp = Number((baseTemp + (Math.sin((i / 24) * 2 * Math.PI) * 0.25)).toFixed(1));
-    const currentResp = Math.round(baseResp + (Math.sin((i / 24) * 2 * Math.PI) * 1.5));
-
-    points.push({
+    let hrOffset = (i === 4 && anomalyConfig ? anomalyConfig.hrDelta : (i % 2 === 0 ? 2 : -1));
+    let sysOffset = (i === 4 && anomalyConfig ? anomalyConfig.sysDelta : 0);
+    trend6h.push({
       timestamp: `2026-11-14T${hour.toString().padStart(2, '0')}:00:00Z`,
       timeLabel,
-      heartRate: currentHr,
-      spo2: Math.min(100, Math.max(92, currentSpo2)),
-      coreTemp: currentTemp,
-      respiratoryRate: currentResp,
+      heartRate: baseHr + hrOffset,
+      hrvRmssd: Math.max(15, baseHrv - (i === 4 && anomalyConfig ? 18 : 2)),
+      systolicBP: baseSys + sysOffset,
+      diastolicBP: baseDia + (sysOffset > 0 ? 5 : 0),
+      spo2: Number((baseSpo2 + (i === 4 && anomalyConfig ? anomalyConfig.spo2Delta : 0)).toFixed(1)),
+      coreTemp: baseTemp,
+      respiratoryRate: baseResp + (i % 2 === 0 ? 1 : 0),
       hrBaselineMin: baseHr - 12,
-      hrBaselineMax: baseHr + 25,
+      hrBaselineMax: baseHr + 22,
       spo2BaselineMin: 95.0,
     });
   }
 
-  return points;
+  // 24-Hour trend (hourly resolution 00:00 to 23:00)
+  const trend24h: VitalTrendPoint[] = [];
+  for (let i = 0; i < 24; i++) {
+    const hour = (i + 11) % 24;
+    const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+
+    let hrVariation = Math.sin((i / 24) * 2 * Math.PI) * 6;
+    let spo2Variation = Math.cos((i / 24) * 2 * Math.PI) * 0.4;
+    let bpVariation = Math.sin((i / 24) * 2 * Math.PI) * 4;
+
+    if (hour >= 23 || hour <= 6) {
+      hrVariation -= 8;
+      bpVariation -= 6;
+    } else if (hour >= 14 && hour <= 16) {
+      hrVariation += 18;
+      bpVariation += 10;
+      spo2Variation -= 0.6;
+    }
+
+    let anomalyHr = 0;
+    let anomalySpo2 = 0;
+    let anomalySys = 0;
+    if (anomalyConfig && hour === anomalyConfig.hour) {
+      anomalyHr = anomalyConfig.hrDelta;
+      anomalySpo2 = anomalyConfig.spo2Delta;
+      anomalySys = anomalyConfig.sysDelta;
+    }
+
+    const currentHr = Math.round(baseHr + hrVariation + anomalyHr);
+    const currentSys = Math.round(baseSys + bpVariation + anomalySys);
+    const currentDia = Math.round(baseDia + (bpVariation * 0.6) + (anomalySys * 0.5));
+    const currentSpo2 = Number((baseSpo2 + spo2Variation + anomalySpo2).toFixed(1));
+    const currentTemp = Number((baseTemp + (Math.sin((i / 24) * 2 * Math.PI) * 0.25)).toFixed(1));
+    const currentResp = Math.round(baseResp + (Math.sin((i / 24) * 2 * Math.PI) * 1.5));
+    const currentHrv = Math.max(14, Math.round(baseHrv - (hrVariation * 0.8) - (anomalyHr > 0 ? 16 : 0)));
+
+    trend24h.push({
+      timestamp: `2026-11-14T${hour.toString().padStart(2, '0')}:00:00Z`,
+      timeLabel,
+      heartRate: currentHr,
+      hrvRmssd: currentHrv,
+      systolicBP: currentSys,
+      diastolicBP: currentDia,
+      spo2: Math.min(100, Math.max(92, currentSpo2)),
+      coreTemp: currentTemp,
+      respiratoryRate: currentResp,
+      hrBaselineMin: baseHr - 12,
+      hrBaselineMax: baseHr + 22,
+      spo2BaselineMin: 95.0,
+    });
+  }
+
+  // 7-Day trend (Day 78 through Day 84 with daily resting averages)
+  const trend7d: VitalTrendPoint[] = [];
+  const days = ['Day 78', 'Day 79', 'Day 80', 'Day 81', 'Day 82', 'Day 83', 'Day 84 (Today)'];
+  days.forEach((dayLabel, idx) => {
+    const driftFactor = (idx / 7);
+    trend7d.push({
+      timestamp: `2026-11-${(8 + idx).toString().padStart(2, '0')}T10:00:00Z`,
+      timeLabel: dayLabel,
+      heartRate: Math.round(baseHr + (driftFactor * (anomalyConfig ? 8 : 2))),
+      hrvRmssd: Math.round(baseHrv - (driftFactor * (anomalyConfig ? 14 : 3))),
+      systolicBP: Math.round(baseSys + (driftFactor * (anomalyConfig ? 6 : 1))),
+      diastolicBP: Math.round(baseDia + (driftFactor * (anomalyConfig ? 4 : 1))),
+      spo2: Number((baseSpo2 - (driftFactor * 0.4)).toFixed(1)),
+      coreTemp: baseTemp,
+      respiratoryRate: baseResp,
+      hrBaselineMin: baseHr - 12,
+      hrBaselineMax: baseHr + 22,
+      spo2BaselineMin: 95.0,
+    });
+  });
+
+  return {
+    '6H': trend6h,
+    '24H': trend24h,
+    '7D': trend7d,
+  };
 }
+
+// Helper for longitudinal cardiovascular history (Day 0 launch to Day 84 current)
+function generateCardiovascular(
+  baseHr: number,
+  baseSys: number,
+  baseDia: number,
+  baseHrv: number,
+  hrDrift: number,
+  orthoScore: number,
+  fluidShift: 'Nominal' | 'Mild Cephalad Shift' | 'Moderate Redistribution'
+): CardiovascularMetrics {
+  const baseMap = Number((baseDia + (baseSys - baseDia) / 3).toFixed(1));
+  const currentMap = Number(((baseDia + hrDrift * 0.4) + ((baseSys + hrDrift * 0.8) - (baseDia + hrDrift * 0.4)) / 3).toFixed(1));
+
+  const history = [
+    { day: 0, dateLabel: 'L-0 (Launch)', restingHr: baseHr, baselineHr: baseHr, map: baseMap, baselineMap: baseMap, orthostaticScore: 96, hrvRmssd: baseHrv },
+    { day: 14, dateLabel: 'Day 14', restingHr: baseHr + 1, baselineHr: baseHr, map: Number((baseMap + 1.2).toFixed(1)), baselineMap: baseMap, orthostaticScore: 92, hrvRmssd: baseHrv - 2 },
+    { day: 28, dateLabel: 'Day 28', restingHr: baseHr + 2, baselineHr: baseHr, map: Number((baseMap + 2.0).toFixed(1)), baselineMap: baseMap, orthostaticScore: 89, hrvRmssd: baseHrv - 5 },
+    { day: 42, dateLabel: 'Day 42', restingHr: baseHr + 3, baselineHr: baseHr, map: Number((baseMap + 1.8).toFixed(1)), baselineMap: baseMap, orthostaticScore: 85, hrvRmssd: baseHrv - 7 },
+    { day: 56, dateLabel: 'Day 56', restingHr: baseHr + 4, baselineHr: baseHr, map: Number((baseMap + 2.5).toFixed(1)), baselineMap: baseMap, orthostaticScore: 82, hrvRmssd: baseHrv - 9 },
+    { day: 70, dateLabel: 'Day 70', restingHr: baseHr + (hrDrift * 0.7), baselineHr: baseHr, map: Number((baseMap + (currentMap - baseMap) * 0.7).toFixed(1)), baselineMap: baseMap, orthostaticScore: Math.round(orthoScore + 6), hrvRmssd: Math.round(baseHrv - 12) },
+    { day: 84, dateLabel: 'Day 84 (Now)', restingHr: baseHr + hrDrift, baselineHr: baseHr, map: currentMap, baselineMap: baseMap, orthostaticScore: orthoScore, hrvRmssd: Math.max(16, baseHrv - (hrDrift * 1.8)) },
+  ];
+
+  return {
+    restingHrDrift: hrDrift,
+    meanArterialPressure: currentMap,
+    strokeVolumeIndex: Number((44.5 - (hrDrift * 0.45)).toFixed(1)), // mL/m²
+    orthostaticToleranceScore: orthoScore,
+    baroreflexSensitivity: Number((14.2 - (hrDrift * 0.3)).toFixed(1)), // ms/mmHg
+    fluidShiftSeverity: fluidShift,
+    history,
+    referenceStandards: {
+      mapMin: 70,
+      mapMax: 105,
+      orthostaticAlertThreshold: 75,
+      baroreflexNominalMin: 8.0,
+      citation: 'NASA Human Research Program (HRP) Cardiovascular Risk Evidence Book / NASA-STD-3001',
+    },
+  };
+}
+
+// Astronaut 1: Commander Elena Rostova
+const elenaTrends = generateTrends(64, 46, 116, 74, 98.4, 36.8, 14);
+const elenaCardio = generateCardiovascular(64, 116, 74, 46, 2, 91, 'Mild Cephalad Shift');
+
+// Astronaut 2: Marcus Vance (Deconditioning & Autonomic Strain)
+const marcusTrends = generateTrends(68, 42, 120, 78, 98.0, 36.9, 14, { hour: 9, hrDelta: 20, spo2Delta: -1.6, sysDelta: 14 });
+const marcusCardio = generateCardiovascular(68, 120, 78, 42, 14, 68, 'Moderate Redistribution');
+
+// Astronaut 3: Dr. Kenji Sato
+const kenjiTrends = generateTrends(60, 52, 114, 72, 98.8, 36.7, 13);
+const kenjiCardio = generateCardiovascular(60, 114, 72, 52, 1, 94, 'Nominal');
+
+// Astronaut 4: Sarah Lin (Circadian Strain)
+const sarahTrends = generateTrends(62, 38, 112, 70, 99.0, 36.8, 14, { hour: 4, hrDelta: 12, spo2Delta: -0.9, sysDelta: 8 });
+const sarahCardio = generateCardiovascular(62, 112, 70, 38, 6, 83, 'Mild Cephalad Shift');
 
 export const MOCK_ASTRONAUTS: AstronautProfile[] = [
   {
@@ -80,11 +204,24 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     name: 'Elena Rostova',
     callsign: 'Vanguard-1',
     role: 'Commander / Mission Lead',
+    nationality: 'USA / NASA',
     age: 44,
     missionDay: 84,
+    totalFlightHours: 4120,
+    evaCount: 4,
     evaHours: 28.5,
     status: 'NOMINAL',
     avatarInitials: 'ER',
+    medicalOfficerNotes:
+      'Nominal physiological adaptation to microgravity. ARED compliance 98%. Resting hemodynamics stable with minimal orthostatic vulnerability. Neurovestibular adaptation complete.',
+    lastExamDate: '2026-11-12',
+    preFlightDeltas: {
+      hrDelta: 2,
+      bpSystolicDelta: -2,
+      bpDiastolicDelta: 1,
+      weightDeltaKg: -0.8,
+      estimatedBoneLossPct: 1.1,
+    },
     baseline: {
       restingHeartRate: 64,
       minHeartRateNominal: 50,
@@ -95,12 +232,13 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       minSpO2Nominal: 95.0,
       baselineCoreTemp: 36.8,
       respiratoryRateRange: [12, 16],
+      baselineHrvRmssd: 46,
     },
     currentVitals: {
       astronautId: 'ASTRO-01',
       timestamp: CURRENT_ISO,
       heartRate: 66,
-      heartRateVariability: 46, // RMSSD in ms
+      heartRateVariability: 46,
       systolicBP: 118,
       diastolicBP: 75,
       spo2: 98.2,
@@ -109,18 +247,33 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       status: 'NOMINAL',
       dataSource: 'SIMULATED TELEMETRY',
     },
-    trend24h: generate24HourTrend(64, 98.4, 36.8, 14),
+    trend24h: elenaTrends['24H'],
+    trendsByWindow: elenaTrends,
+    cardiovascular: elenaCardio,
   },
   {
     id: 'ASTRO-02',
     name: 'Marcus Vance',
     callsign: 'Aegis-2',
     role: 'Flight Engineer / Systems Officer',
+    nationality: 'CAN / CSA',
     age: 39,
     missionDay: 84,
+    totalFlightHours: 1890,
+    evaCount: 2,
     evaHours: 19.0,
     status: 'CAUTION',
     avatarInitials: 'MV',
+    medicalOfficerNotes:
+      'Exhibiting autonomic cardiac strain post-exercise. HRV suppression (RMSSD 19ms) and compensatory resting tachycardia noted. Fluid redistribution and mild hypovolemia suspected. Oral isotonic hydration protocol active.',
+    lastExamDate: '2026-11-13',
+    preFlightDeltas: {
+      hrDelta: 14,
+      bpSystolicDelta: 12,
+      bpDiastolicDelta: 8,
+      weightDeltaKg: -1.6,
+      estimatedBoneLossPct: 1.8,
+    },
     baseline: {
       restingHeartRate: 68,
       minHeartRateNominal: 52,
@@ -131,12 +284,13 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       minSpO2Nominal: 95.0,
       baselineCoreTemp: 36.9,
       respiratoryRateRange: [12, 18],
+      baselineHrvRmssd: 42,
     },
     currentVitals: {
       astronautId: 'ASTRO-02',
       timestamp: CURRENT_ISO,
-      heartRate: 88, // Elevated resting HR
-      heartRateVariability: 19, // Severely suppressed HRV (RMSSD < 20ms)
+      heartRate: 88,
+      heartRateVariability: 19,
       systolicBP: 132,
       diastolicBP: 86,
       spo2: 96.4,
@@ -145,18 +299,33 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       status: 'CAUTION',
       dataSource: 'SIMULATED TELEMETRY',
     },
-    trend24h: generate24HourTrend(68, 98.0, 36.9, 14, { hour: 9, hrDelta: 18, spo2Delta: -1.6 }),
+    trend24h: marcusTrends['24H'],
+    trendsByWindow: marcusTrends,
+    cardiovascular: marcusCardio,
   },
   {
     id: 'ASTRO-03',
     name: 'Dr. Kenji Sato',
     callsign: 'Caduceus-3',
     role: 'Medical Officer / Mission Specialist',
+    nationality: 'JPN / JAXA',
     age: 47,
     missionDay: 84,
+    totalFlightHours: 3250,
+    evaCount: 2,
     evaHours: 14.2,
     status: 'NOMINAL',
     avatarInitials: 'KS',
+    medicalOfficerNotes:
+      'All biomedical indicators within normal tolerances. Rigorous adherence to CEVIS cycle ergometer and resistive exercise protocols. Baroreflex and autonomic tone robust.',
+    lastExamDate: '2026-11-14',
+    preFlightDeltas: {
+      hrDelta: 1,
+      bpSystolicDelta: 1,
+      bpDiastolicDelta: 2,
+      weightDeltaKg: -0.4,
+      estimatedBoneLossPct: 0.9,
+    },
     baseline: {
       restingHeartRate: 60,
       minHeartRateNominal: 48,
@@ -167,6 +336,7 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       minSpO2Nominal: 95.0,
       baselineCoreTemp: 36.7,
       respiratoryRateRange: [11, 15],
+      baselineHrvRmssd: 52,
     },
     currentVitals: {
       astronautId: 'ASTRO-03',
@@ -181,18 +351,33 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       status: 'NOMINAL',
       dataSource: 'SIMULATED TELEMETRY',
     },
-    trend24h: generate24HourTrend(60, 98.8, 36.7, 13),
+    trend24h: kenjiTrends['24H'],
+    trendsByWindow: kenjiTrends,
+    cardiovascular: kenjiCardio,
   },
   {
     id: 'ASTRO-04',
     name: 'Sarah Lin',
     callsign: 'Kepler-4',
     role: 'Payload Specialist / Bio-researcher',
+    nationality: 'USA / NASA',
     age: 34,
     missionDay: 84,
+    totalFlightHours: 720,
+    evaCount: 1,
     evaHours: 8.0,
     status: 'CAUTION',
     avatarInitials: 'SL',
+    medicalOfficerNotes:
+      'Sub-acute circadian phase misalignment following consecutive night-pass experiment runs. Melatonin suppression suspected from high blue-spectrum workstation exposure. Prescribed light therapy adjustments.',
+    lastExamDate: '2026-11-11',
+    preFlightDeltas: {
+      hrDelta: 6,
+      bpSystolicDelta: 6,
+      bpDiastolicDelta: 4,
+      weightDeltaKg: -1.1,
+      estimatedBoneLossPct: 1.4,
+    },
     baseline: {
       restingHeartRate: 62,
       minHeartRateNominal: 50,
@@ -203,6 +388,7 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       minSpO2Nominal: 95.0,
       baselineCoreTemp: 36.8,
       respiratoryRateRange: [12, 16],
+      baselineHrvRmssd: 38,
     },
     currentVitals: {
       astronautId: 'ASTRO-04',
@@ -217,7 +403,9 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
       status: 'CAUTION',
       dataSource: 'SIMULATED TELEMETRY',
     },
-    trend24h: generate24HourTrend(62, 99.0, 36.8, 14, { hour: 4, hrDelta: 10, spo2Delta: -0.8 }),
+    trend24h: sarahTrends['24H'],
+    trendsByWindow: sarahTrends,
+    cardiovascular: sarahCardio,
   },
 ];
 

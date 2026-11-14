@@ -3,6 +3,9 @@ import { TabId } from './types/spacecare';
 import { MOCK_ASTRONAUTS, MOCK_ALERTS, MOCK_MISSION_SUMMARY } from './services/mockTelemetry';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { OverviewDashboard } from './pages/OverviewDashboard';
+import { CrewManagementPage } from './pages/CrewManagementPage';
+import { VitalSignsPage } from './pages/VitalSignsPage';
+import { CardiovascularPage } from './pages/CardiovascularPage';
 import { PhaseNoticePlaceholder } from './components/dashboard/PhaseNoticePlaceholder';
 
 export default function App() {
@@ -27,6 +30,50 @@ export default function App() {
     reports: 'Health Reports',
   };
 
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <OverviewDashboard
+            crew={MOCK_ASTRONAUTS}
+            selectedAstronaut={selectedAstronaut}
+            onSelectAstronaut={setSelectedAstronautId}
+            alerts={MOCK_ALERTS}
+            missionSummary={MOCK_MISSION_SUMMARY}
+          />
+        );
+      case 'crew':
+        return (
+          <CrewManagementPage
+            crew={MOCK_ASTRONAUTS}
+            selectedAstronautId={selectedAstronautId}
+            onSelectAstronaut={setSelectedAstronautId}
+            onNavigateTab={setActiveTab}
+          />
+        );
+      case 'vitals':
+        return (
+          <VitalSignsPage
+            selectedAstronaut={selectedAstronaut}
+          />
+        );
+      case 'cardiovascular':
+        return (
+          <CardiovascularPage
+            selectedAstronaut={selectedAstronaut}
+          />
+        );
+      default:
+        return (
+          <PhaseNoticePlaceholder
+            tabId={activeTab}
+            tabLabel={tabLabels[activeTab]}
+            onReturnToOverview={() => setActiveTab('overview')}
+          />
+        );
+    }
+  };
+
   return (
     <DashboardLayout
       activeTab={activeTab}
@@ -36,21 +83,7 @@ export default function App() {
       onSelectAstronaut={setSelectedAstronautId}
       activeAlertCount={activeAlertCount}
     >
-      {activeTab === 'overview' ? (
-        <OverviewDashboard
-          crew={MOCK_ASTRONAUTS}
-          selectedAstronaut={selectedAstronaut}
-          onSelectAstronaut={setSelectedAstronautId}
-          alerts={MOCK_ALERTS}
-          missionSummary={MOCK_MISSION_SUMMARY}
-        />
-      ) : (
-        <PhaseNoticePlaceholder
-          tabId={activeTab}
-          tabLabel={tabLabels[activeTab]}
-          onReturnToOverview={() => setActiveTab('overview')}
-        />
-      )}
+      {renderActiveView()}
     </DashboardLayout>
   );
 }
