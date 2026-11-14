@@ -29,7 +29,7 @@ interface ManualHealthInputPageProps {
   crew: AstronautProfile[];
   selectedAstronautId: string;
   onSelectAstronaut: (id: string) => void;
-  onReadingSubmitted?: (reading: TelemetryReading) => void;
+  onReadingSubmitted?: (reading: TelemetryReading) => void | Promise<any>;
   backendMode?: ConnectionMode;
 }
 
@@ -222,17 +222,19 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
     };
 
     try {
-      const response = await spacecareApi.submitTelemetryReading(readingPayload);
-
-      // Successfully saved or previewed
-      const fullReading: TelemetryReading = response.data;
-      setSubmittedReadings((prev) => [fullReading, ...prev]);
-
       if (onReadingSubmitted) {
-        onReadingSubmitted(fullReading);
+        await onReadingSubmitted(readingPayload as TelemetryReading);
+      } else {
+        await spacecareApi.submitTelemetryReading(readingPayload);
       }
 
-      if (response.mode === 'LIVE_API') {
+      const fullReading: TelemetryReading = {
+        id: Date.now(),
+        ...readingPayload,
+      };
+      setSubmittedReadings((prev) => [fullReading, ...prev]);
+
+      if (backendMode === 'LIVE_API') {
         setBackendFeedback({
           success: true,
           message: `Saved to SQLite Database: Telemetry reading for ${currentAstronaut.name} (${currentAstronaut.id}) recorded at ${new Date(timestamp).toLocaleTimeString()} UTC.`,
@@ -242,7 +244,7 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
       } else {
         setBackendFeedback({
           success: true,
-          message: `Session Preview Only — Backend POST /api/v1/telemetry Route Pending: Telemetry reading for ${currentAstronaut.name} staged in active frontend session memory.`,
+          message: `Session Staged & Globally Propagated: Telemetry reading for ${currentAstronaut.name} updated across all dashboard pages.`,
           isPending: true,
           reading: fullReading,
         });

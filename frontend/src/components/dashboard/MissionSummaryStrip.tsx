@@ -93,7 +93,11 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             Telemetry Sync
           </span>
           <span className="text-xs font-semibold text-space-text mt-1 font-mono">
-            {new Date(summary.telemetrySyncTime).toLocaleTimeString('en-US', { timeZone: 'UTC' })} UTC
+            {summary.telemetrySyncTime.includes(':') && !summary.telemetrySyncTime.includes('T')
+              ? summary.telemetrySyncTime
+              : !isNaN(new Date(summary.telemetrySyncTime).getTime())
+              ? `${new Date(summary.telemetrySyncTime).toLocaleTimeString('en-US', { timeZone: 'UTC' })} UTC`
+              : summary.telemetrySyncTime}
           </span>
           <span className="text-[10px] inline-flex items-center gap-1 text-space-cyan mt-0.5 font-mono">
             <Database className="w-3 h-3" />
