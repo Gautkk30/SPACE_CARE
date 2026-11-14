@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 import os
 
-from app.api.routes import research,health
+from app.api.routes import research,health,radiation
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -65,6 +65,11 @@ async def health_check():
 # ==============================================================================
 app.include_router(research.router, prefix="/api/v1/research", tags=["Research"])
 app.include_router(health.router, prefix="/api/v1/vitals", tags=["Vitals"])
+app.include_router(
+    radiation.router,
+    prefix="/api/v1/radiation",
+    tags=["Radiation"]
+)
 
 if __name__ == "__main__":
     import uvicorn
