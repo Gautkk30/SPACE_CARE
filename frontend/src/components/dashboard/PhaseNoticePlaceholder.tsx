@@ -24,6 +24,11 @@ const TAB_DESCRIPTIONS: Record<TabId, { title: string; desc: string; backendHook
     desc: 'High-frequency telemetry stream inspector (HRV, SpO2, core temperature, blood pressure, respiration).',
     backendHook: '/api/v1/astronauts/{id}/vitals',
   },
+  'hazard-lab': {
+    title: 'NASA-STD-3001 Operational Hazard & Physiology Lab',
+    desc: 'Interactive real-time spaceflight hazard simulation and coupled physiological response model.',
+    backendHook: '/api/v1/telemetry/simulate',
+  },
   cardiovascular: {
     title: 'Cardiovascular Deconditioning & Adaptation',
     desc: 'Longitudinal monitoring of orthostatic intolerance, arterial stiffness, and cephalad fluid shifting.',

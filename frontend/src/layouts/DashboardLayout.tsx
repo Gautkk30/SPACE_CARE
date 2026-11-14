@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   HeartPulse,
+  Flame,
   Activity,
   Dumbbell,
   Sun,
@@ -47,7 +48,7 @@ export const DashboardLayout = ({
   selectedAstronautId,
   onSelectAstronaut,
   activeAlertCount,
-  backendMode = 'SIMULATED_FALLBACK',
+  backendMode = 'OFFLINE_DEMO_FALLBACK',
 }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUtc, setCurrentUtc] = useState<string>('');
@@ -68,6 +69,7 @@ export const DashboardLayout = ({
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'crew', label: 'Crew Management', icon: Users },
     { id: 'vitals', label: 'Vital Signs', icon: HeartPulse },
+    { id: 'hazard-lab', label: 'Hazard & Physiology Lab', icon: Flame },
     { id: 'cardiovascular', label: 'Cardiovascular Health', icon: Activity },
     { id: 'bone-muscle', label: 'Bone & Muscle Health', icon: Dumbbell },
     { id: 'radiation', label: 'Radiation Monitoring', icon: Sun },
@@ -117,18 +119,28 @@ export const DashboardLayout = ({
           {/* Backend Connection Status Pill */}
           <div
             className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium border ${
-              backendMode === 'LIVE_BACKEND'
+              backendMode === 'LIVE_API'
                 ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/40'
+                : backendMode === 'API_HEALTHY_ROUTES_PENDING'
+                ? 'bg-space-amber-muted text-space-amber border-space-amber/40'
                 : 'bg-space-bg text-space-dim border-space-border'
             }`}
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                backendMode === 'LIVE_BACKEND' ? 'bg-space-emerald animate-ping' : 'bg-space-amber'
+                backendMode === 'LIVE_API' 
+                  ? 'bg-space-emerald animate-ping' 
+                  : backendMode === 'API_HEALTHY_ROUTES_PENDING'
+                  ? 'bg-space-amber'
+                  : 'bg-space-dim'
               }`}
             />
             <span>
-              {backendMode === 'LIVE_BACKEND' ? 'BACKEND: CONNECTED' : 'BACKEND: STANDBY • SIMULATED'}
+              {backendMode === 'LIVE_API'
+                ? 'BACKEND: LIVE API (VERIFIED)'
+                : backendMode === 'API_HEALTHY_ROUTES_PENDING'
+                ? 'BACKEND: ONLINE (ROUTES PENDING)'
+                : 'BACKEND: OFFLINE DEMO FALLBACK'}
             </span>
           </div>
 

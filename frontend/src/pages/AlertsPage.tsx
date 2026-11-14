@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HealthAlert, AlertSeverity, AlertStatus, HealthCategory } from '../types/spacecare';
+import { ConnectionMode } from '../services/api';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -12,18 +13,21 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
+  CloudOff,
 } from 'lucide-react';
 
 interface AlertsPageProps {
   alerts: HealthAlert[];
   onAcknowledgeAlert: (alertId: string) => void;
   onResolveAlert: (alertId: string) => void;
+  backendMode?: ConnectionMode;
 }
 
 export const AlertsPage = ({
   alerts,
   onAcknowledgeAlert,
   onResolveAlert,
+  backendMode = 'OFFLINE_DEMO_FALLBACK',
 }: AlertsPageProps) => {
   const [severityFilter, setSeverityFilter] = useState<'ALL' | AlertSeverity>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | AlertStatus>('ALL');
@@ -120,6 +124,21 @@ export const AlertsPage = ({
           </span>
         </div>
       </div>
+
+      {/* Backend Action State Banner */}
+      {backendMode !== 'LIVE_API' && (
+        <div className="bg-space-panel/80 border border-space-amber/30 rounded-xl p-3 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-space-amber font-mono">
+          <div className="flex items-center gap-2">
+            <CloudOff className="w-4 h-4 text-space-amber shrink-0" />
+            <span>
+              <strong>Session Preview (Backend Route Pending):</strong> Database persistence is waiting for FastAPI route mount. Acknowledging alerts updates in-memory UI only.
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-space-amber/10 border border-space-amber/20 self-start sm:self-auto">
+            In-Memory Only
+          </span>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col gap-3 text-xs">
@@ -289,9 +308,13 @@ export const AlertsPage = ({
                       <button
                         onClick={() => onAcknowledgeAlert(alert.id)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-space-amber/10 hover:bg-space-amber/20 border border-space-amber/30 text-space-amber font-semibold transition"
+                        title={backendMode === 'LIVE_API' ? 'Acknowledges alert in SQLite database' : 'Session Preview (Backend Route Pending)'}
                       >
                         <Check className="w-3.5 h-3.5" />
-                        Acknowledge Alert
+                        <span>Acknowledge Alert</span>
+                        {backendMode !== 'LIVE_API' && (
+                          <span className="text-[9px] font-normal text-space-dim ml-0.5">(Preview)</span>
+                        )}
                       </button>
                     )}
 

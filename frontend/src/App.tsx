@@ -13,24 +13,39 @@ import { MentalHealthSleepPage } from './pages/MentalHealthSleepPage';
 import { AIAnalysisPage } from './pages/AIAnalysisPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { HealthReportsPage } from './pages/HealthReportsPage';
+import { HazardSimulatorPage } from './pages/HazardSimulatorPage';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [selectedAstronautId, setSelectedAstronautId] = useState<string>(MOCK_ASTRONAUTS[0].id);
   const [alerts, setAlerts] = useState<HealthAlert[]>(MOCK_ALERTS);
-  const [backendMode, setBackendMode] = useState<ConnectionMode>('SIMULATED_FALLBACK');
+  const [backendMode, setBackendMode] = useState<ConnectionMode>('OFFLINE_DEMO_FALLBACK');
 
-  // Probe backend connection health on startup
+  // Probe backend connection health on startup and periodically
   useEffect(() => {
-    spacecareApi.checkBackendHealth().then((res) => {
-      setBackendMode(res.online ? 'LIVE_BACKEND' : 'SIMULATED_FALLBACK');
-    });
+    const checkStatus = () => {
+      spacecareApi.checkBackendHealth().then((res) => {
+        setBackendMode(res.state);
+      });
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const selectedAstronaut =
     MOCK_ASTRONAUTS.find((a) => a.id === selectedAstronautId) || MOCK_ASTRONAUTS[0];
 
-  const handleAcknowledgeAlert = (alertId: string) => {
+  const handleAcknowledgeAlert = async (alertId: string) => {
+    // If connected to LIVE_API, invoke the actual PATCH route
+    if (backendMode === 'LIVE_API') {
+      try {
+        await spacecareApi.acknowledgeAlert(alertId);
+      } catch (e) {
+        console.error('Failed to acknowledge alert on backend:', e);
+      }
+    }
+    // Update local state (optimistic or fallback in-memory)
     setAlerts((prev) =>
       prev.map((a) => (a.id === alertId ? { ...a, status: 'ACKNOWLEDGED', acknowledged: true } : a))
     );
@@ -66,7 +81,16 @@ export default function App() {
           />
         );
       case 'vitals':
-        return <VitalSignsPage selectedAstronaut={selectedAstronaut} />;
+        return <VitalSignsPage selectedAstronaut={selectedAstronaut} backendMode={backendMode} />;
+      case 'hazard-lab':
+        return (
+          <HazardSimulatorPage
+            crew={MOCK_ASTRONAUTS}
+            selectedAstronautId={selectedAstronautId}
+            onSelectAstronaut={setSelectedAstronautId}
+            backendMode={backendMode}
+          />
+        );
       case 'cardiovascular':
         return <CardiovascularPage selectedAstronaut={selectedAstronaut} />;
       case 'bone-muscle':
@@ -83,6 +107,7 @@ export default function App() {
             alerts={alerts}
             onAcknowledgeAlert={handleAcknowledgeAlert}
             onResolveAlert={handleResolveAlert}
+            backendMode={backendMode}
           />
         );
       case 'reports':

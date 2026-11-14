@@ -5,16 +5,51 @@
  */
 
 export type HealthStatus = 'NOMINAL' | 'CAUTION' | 'ALERT';
-export type AlertSeverity = 'INFO' | 'CAUTION' | 'CRITICAL';
+export type AlertSeverity = 'INFO' | 'CAUTION' | 'CRITICAL' | 'WARNING';
 export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
 export type HealthCategory = 
   | 'CARDIOVASCULAR' 
   | 'RADIATION' 
   | 'MUSCULOSKELETAL' 
   | 'SLEEP_PSYCH' 
-  | 'ENVIRONMENTAL';
+  | 'ENVIRONMENTAL'
+  | 'RESPIRATORY'
+  | 'VITALS';
 
 export type TimeWindow = '6H' | '24H' | '7D';
+
+/**
+ * Data provenance source matching backend app/models/data_source.py
+ */
+export type DataSourceType = 'SYNTHETIC_SIMULATED' | 'NASA_RESEARCH' | 'SENSOR_LIVE';
+
+/**
+ * Controlled physiological simulation patterns matching backend TelemetryGenerator
+ */
+export type SimulatedPattern = 
+  | 'NORMAL' 
+  | 'HYPOXIA' 
+  | 'THERMAL_STRAIN' 
+  | 'ACUTE_TACHYCARDIA' 
+  | 'HYPOTENSION_DECONDITIONING';
+
+/**
+ * Raw telemetry record matching backend SQLAlchemy `telemetry` table
+ */
+export interface TelemetryReading {
+  id: number;
+  astronaut_id: string;
+  timestamp: string; // ISO 8601 UTC
+  heart_rate: number;
+  systolic_bp: number;
+  diastolic_bp: number;
+  spo2: number;
+  body_temperature: number;
+  respiration_rate: number;
+  data_source: DataSourceType;
+  is_simulated: boolean;
+  dataset_reference?: string | null;
+}
 
 export interface AstronautBaseline {
   restingHeartRate: number; // bpm
@@ -26,7 +61,7 @@ export interface AstronautBaseline {
   minSpO2Nominal: number; // %
   baselineCoreTemp: number; // °C
   respiratoryRateRange: [number, number]; // breaths/min [min, max]
-  baselineHrvRmssd: number; // ms
+  baselineHrvRmssd?: number; // ms (optional demonstration metric)
 }
 
 export interface PreFlightDeltas {
@@ -244,6 +279,12 @@ export interface HealthAlert {
   evidenceReference: string;
   timestamp: string;
   acknowledged: boolean;
+  // Backend database alignment fields
+  astronaut_id?: string;
+  message?: string;
+  confidence_score?: number;
+  recommendation?: string;
+  is_acknowledged?: boolean;
 }
 
 export interface MissionHealthReport {
@@ -319,6 +360,18 @@ export interface AstronautProfile {
   musculoskeletal: MusculoskeletalMetrics;
   mentalHealth: MentalHealthMetrics;
   aiAnalysis: AIAnalysisResult;
+
+  // Direct backend database `astronauts` table fields
+  gender?: string;
+  mission?: string;
+  is_demo?: boolean;
+  baseline_heart_rate?: number;
+  baseline_systolic_bp?: number;
+  baseline_diastolic_bp?: number;
+  baseline_spo2?: number;
+  baseline_temperature?: number;
+  baseline_body_temperature?: number;
+  baseline_respiration_rate?: number;
 }
 
 export interface MissionSummary {
@@ -338,6 +391,7 @@ export type TabId =
   | 'overview'
   | 'crew'
   | 'vitals'
+  | 'hazard-lab'
   | 'cardiovascular'
   | 'bone-muscle'
   | 'radiation'

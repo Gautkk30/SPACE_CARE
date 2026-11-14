@@ -3,7 +3,9 @@ import {
   AstronautProfile,
   TimeWindow,
   VitalTrendPoint,
+  SimulatedPattern,
 } from '../types/spacecare';
+import { spacecareApi, ConnectionMode } from '../services/api';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -26,10 +28,15 @@ import {
   Calendar,
   ShieldCheck,
   AlertTriangle,
+  Play,
+  CheckCircle2,
+  CloudOff,
+  Sparkles,
 } from 'lucide-react';
 
 interface VitalSignsPageProps {
   selectedAstronaut: AstronautProfile;
+  backendMode?: ConnectionMode;
 }
 
 interface CustomTooltipProps {
@@ -66,12 +73,58 @@ const DarkChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export const VitalSignsPage = ({ selectedAstronaut }: VitalSignsPageProps) => {
+export const VitalSignsPage = ({
+  selectedAstronaut,
+  backendMode = 'OFFLINE_DEMO_FALLBACK',
+}: VitalSignsPageProps) => {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('24H');
+  const [selectedPattern, setSelectedPattern] = useState<SimulatedPattern>('NORMAL');
+  const [readingCount, setReadingCount] = useState<number>(50);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [simResult, setSimResult] = useState<{ message: string; isPending?: boolean } | null>(null);
+
   const trendData: VitalTrendPoint[] =
     selectedAstronaut.trendsByWindow[timeWindow] || selectedAstronaut.trend24h;
 
   const { baseline, currentVitals } = selectedAstronaut;
+
+  const handleTriggerSimulation = async () => {
+    setIsSimulating(true);
+    setSimResult(null);
+
+    try {
+      const res = await spacecareApi.simulateTelemetry({
+        astronaut_id: selectedAstronaut.id,
+        pattern: selectedPattern,
+        count: readingCount,
+        interval_seconds: 10,
+      });
+
+      if (res.isPendingRoute || res.mode === 'API_HEALTHY_ROUTES_PENDING') {
+        setSimResult({
+          message: `[Session Notice] POST /api/v1/telemetry/simulate is pending backend route mount. Request formatted for ${selectedAstronaut.name} (${selectedPattern}, count: ${readingCount}).`,
+          isPending: true,
+        });
+      } else if (res.mode === 'LIVE_API') {
+        setSimResult({
+          message: `Success: Injected ${res.data.records_generated} telemetry readings (${res.data.pattern}) into SQLite database.`,
+          isPending: false,
+        });
+      } else {
+        setSimResult({
+          message: `[Offline Mode] Generated ${readingCount} simulated readings locally for ${selectedAstronaut.name} (${selectedPattern}).`,
+          isPending: true,
+        });
+      }
+    } catch {
+      setSimResult({
+        message: 'Simulation request error.',
+        isPending: true,
+      });
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -126,6 +179,123 @@ export const VitalSignsPage = ({ selectedAstronaut }: VitalSignsPageProps) => {
           </div>
         </div>
       </div>
+
+      {/* Telemetry Scenario Trigger Panel (TelemetryGenerator Scenarios) */}
+      <div className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-space-border/60 gap-2">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-space-cyan flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-space-cyan" />
+              Telemetry Scenario Trigger &bull; TelemetryGenerator Control
+            </h2>
+            <p className="text-xs text-space-dim mt-0.5">
+              Simulate microgravity physiological stress scenarios matching backend <code className="text-space-cyan">SimulatedPattern</code> algorithms.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-space-bg border border-space-border text-space-dim">
+              POST /api/v1/telemetry/simulate &bull; {backendMode}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-end text-xs">
+          {/* Target Astronaut (synchronized) */}
+          <div>
+            <label className="text-[11px] font-mono text-space-dim uppercase block mb-1">
+              Target Astronaut
+            </label>
+            <div className="p-2 rounded bg-space-bg border border-space-border font-medium text-space-text truncate">
+              {selectedAstronaut.name} ({selectedAstronaut.id})
+            </div>
+          </div>
+
+          {/* Scenario Pattern Selector */}
+          <div>
+            <label className="text-[11px] font-mono text-space-dim uppercase block mb-1">
+              Physiological Scenario
+            </label>
+            <select
+              value={selectedPattern}
+              onChange={(e) => setSelectedPattern(e.target.value as SimulatedPattern)}
+              className="w-full bg-space-bg border border-space-border rounded p-2 text-space-text font-semibold focus:outline-none focus:border-space-cyan"
+            >
+              <option value="NORMAL">NORMAL (Circadian Baseline)</option>
+              <option value="HYPOXIA">HYPOXIA (Low SpO2 & High RR)</option>
+              <option value="THERMAL_STRAIN">THERMAL_STRAIN (Temp &gt; 38°C + Tachycardia)</option>
+              <option value="ACUTE_TACHYCARDIA">ACUTE_TACHYCARDIA (HR &gt; 115 bpm)</option>
+              <option value="HYPOTENSION_DECONDITIONING">HYPOTENSION_DECONDITIONING (Microgravity Deconditioning)</option>
+            </select>
+          </div>
+
+          {/* Reading Count */}
+          <div>
+            <label className="text-[11px] font-mono text-space-dim uppercase block mb-1">
+              Sample Count
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="10"
+                max="500"
+                step="10"
+                value={readingCount}
+                onChange={(e) => setReadingCount(Number(e.target.value))}
+                className="w-full bg-space-bg border border-space-border rounded p-2 text-space-text font-mono focus:outline-none focus:border-space-cyan"
+              />
+              <span className="text-space-dim font-mono">pts</span>
+            </div>
+          </div>
+
+          {/* Execute Button */}
+          <div>
+            <button
+              onClick={handleTriggerSimulation}
+              disabled={isSimulating}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-space-cyan text-space-bg font-bold hover:bg-space-cyan/90 transition disabled:opacity-50"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>{isSimulating ? 'Injecting...' : 'Inject Scenario'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Feedback message banner */}
+        {simResult && (
+          <div
+            className={`p-3 rounded-lg text-xs font-mono border flex items-start gap-2.5 ${
+              simResult.isPending
+                ? 'bg-space-amber-muted/30 border-space-amber/40 text-space-amber'
+                : 'bg-space-emerald-muted/30 border-space-emerald/40 text-space-emerald'
+            }`}
+          >
+            {simResult.isPending ? (
+              <CloudOff className="w-4 h-4 shrink-0 mt-0.5 text-space-amber" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-space-emerald" />
+            )}
+            <div className="flex-1">
+              <p className="font-semibold">{simResult.message}</p>
+              {simResult.isPending && (
+                <p className="text-[11px] text-space-dim mt-0.5">
+                  Notice: Frontend simulation trigger is active and verified. The backend FastAPI endpoint <code className="text-space-amber">POST /api/v1/telemetry/simulate</code> will process and persist these readings once mounted in <code className="text-space-amber">backend/app/main.py</code>.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Empty State Banner if no telemetry */}
+      {trendData.length === 0 && (
+        <div className="bg-space-panel border border-space-border rounded-xl p-10 text-center space-y-3">
+          <Database className="w-10 h-10 text-space-cyan mx-auto" />
+          <h3 className="text-base font-semibold text-space-text">No Telemetry Readings Recorded</h3>
+          <p className="text-xs text-space-dim max-w-md mx-auto">
+            The telemetry table in SQLite is currently empty for astronaut {selectedAstronaut.name}. Use the Telemetry Scenario Trigger above to inject readings or seed simulated data.
+          </p>
+        </div>
+      )}
 
       {/* 4 Dedicated Telemetry Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
