@@ -10,21 +10,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import os
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import settings
-from app.database.session import init_db
-from app.api.api import api_router
-from app.api.routes import research, health, radiation
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Initialize database tables and seed demo astronaut
-    init_db()
-    yield
-
+from app.api.routes import research,health
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -76,11 +62,8 @@ async def health_check():
 # ==============================================================================
 # Route registrations:
 # ==============================================================================
-app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(research.router, prefix=f"{settings.API_V1_STR}/research", tags=["Research"])
-app.include_router(health.router, prefix=f"{settings.API_V1_STR}/vitals", tags=["Vitals"])
-app.include_router(radiation.router, prefix=f"{settings.API_V1_STR}/radiation", tags=["Radiation"])
-
+app.include_router(research.router, prefix="/api/v1/research", tags=["Research"])
+app.include_router(health.router, prefix="/api/v1/vitals", tags=["Vitals"])
 
 if __name__ == "__main__":
     import uvicorn
