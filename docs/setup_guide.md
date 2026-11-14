@@ -17,7 +17,7 @@ Ensure the following tools are installed on your workstation:
 
 1. Open your terminal in the project root:
    ```bash
-   cd SPACECARE-2026
+   cd SPACECARE
    ```
 
 2. Create your local environment configuration file:
