@@ -51,10 +51,10 @@ export const SampleDistributionChart: React.FC<Props> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs shadow-xl backdrop-blur">
-          <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-slate-800 pb-1">
-            <span className="font-bold text-white">{data.gsm}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono">
+        <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg p-3 text-xs font-mono tabular-nums shadow-xl">
+          <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-white/10 pb-1">
+            <span className="font-bold text-sky-400">{data.gsm}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-slate-300 font-mono">
               {data.cohort} &ndash; {data.time}
             </span>
           </div>
@@ -62,7 +62,7 @@ export const SampleDistributionChart: React.FC<Props> = ({
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-4">
               <span className="text-slate-400">Technical Detection:</span>
-              <span className="font-bold text-sky-400">{data.rate}%</span>
+              <span className="font-bold text-white">{data.rate}%</span>
             </div>
             <div className="flex items-center justify-between gap-4 text-[11px]">
               <span className="text-slate-400">Detected Probes:</span>
@@ -73,7 +73,7 @@ export const SampleDistributionChart: React.FC<Props> = ({
               <span className="text-slate-200">{data.totalProbes.toLocaleString()}</span>
             </div>
           </div>
-          <p className="text-[10px] text-slate-500 mt-2 truncate max-w-xs">
+          <p className="text-[10px] text-slate-400 mt-2 truncate max-w-xs">
             {data.sampleId}
           </p>
         </div>

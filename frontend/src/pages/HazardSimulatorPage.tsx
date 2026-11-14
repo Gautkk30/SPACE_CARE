@@ -403,19 +403,19 @@ export const HazardSimulatorPage = ({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-space-border/60">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-space-cyan-muted text-space-cyan border border-space-cyan/30 mb-2">
-            <Flame className="w-3.5 h-3.5 text-space-cyan" />
+          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-[#0B3D91]/25 text-sky-400 border border-[#1A56DB]/40 mb-2 tabular-nums">
+            <Flame className="w-3.5 h-3.5 text-sky-400" />
             NASA-STD-3001 Operational Hazard & Physiology Lab
           </div>
-          <h1 className="text-2xl font-bold text-space-text flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <span>Spaceflight Hazard Simulator</span>
-            <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded bg-space-panel border border-space-border text-space-muted">
+            <span className="text-xs font-mono tabular-nums font-normal px-2.5 py-0.5 rounded bg-black/40 border border-white/[0.08] text-slate-400">
               Interactive Coupled Biometrics Model
             </span>
           </h1>
-          <p className="text-xs text-space-dim mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Real-time multi-variable spaceflight stress simulation calibrated against NASA Human Research Program clinical thresholds.
           </p>
         </div>
@@ -423,16 +423,16 @@ export const HazardSimulatorPage = ({
         {/* Crew Switcher & Preset Selector */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Target Astronaut selector */}
-          <div className="flex items-center gap-2 bg-space-panel border border-space-border rounded-lg px-3 py-1.5 text-xs">
-            <User className="w-3.5 h-3.5 text-space-cyan" />
-            <span className="text-space-dim hidden sm:inline">Subject:</span>
+          <div className="flex items-center gap-2 bg-space-panel border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs">
+            <User className="w-3.5 h-3.5 text-sky-400" />
+            <span className="text-slate-400 hidden sm:inline font-mono">Subject:</span>
             <select
               value={selectedAstronautId}
               onChange={(e) => onSelectAstronaut(e.target.value)}
-              className="bg-transparent text-space-text font-bold focus:outline-none cursor-pointer text-xs"
+              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs"
             >
               {crew.map((member) => (
-                <option key={member.id} value={member.id} className="bg-space-panel text-space-text">
+                <option key={member.id} value={member.id} className="bg-[#0c1220] text-white">
                   {member.name} ({member.id})
                 </option>
               ))}
@@ -441,18 +441,18 @@ export const HazardSimulatorPage = ({
 
           <button
             onClick={() => applyPreset('Nominal Transit')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-panel hover:bg-space-panel-hover border border-space-border text-space-muted hover:text-space-text text-xs transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white text-xs transition"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
             <span>Reset Sliders</span>
           </button>
         </div>
       </div>
 
       {/* Emergency Preset Quick Selectors */}
-      <div className="bg-space-panel border border-space-border rounded-xl p-3.5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2 text-space-muted font-semibold uppercase tracking-wider text-[11px]">
-          <Zap className="w-4 h-4 text-space-amber" />
+      <div className="bg-space-panel border border-white/[0.08] rounded-xl p-3.5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+          <Zap className="w-4 h-4 text-amber-400" />
           <span>NASA Mission Scenarios:</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -466,10 +466,10 @@ export const HazardSimulatorPage = ({
             <button
               key={preset}
               onClick={() => applyPreset(preset)}
-              className={`px-3 py-1.5 rounded-lg font-mono text-[11px] transition border ${
+              className={`px-3 py-1.5 rounded-lg font-mono tabular-nums text-[11px] transition border ${
                 activePreset === preset
-                  ? 'bg-space-cyan text-space-bg border-space-cyan font-bold shadow-md shadow-space-cyan/20'
-                  : 'bg-space-bg text-space-dim border-space-border hover:text-space-text hover:border-space-border-light'
+                  ? 'bg-[#0B3D91] text-white border-[#1A56DB] font-bold shadow-md shadow-[#0B3D91]/30'
+                  : 'bg-black/30 text-slate-400 border-white/[0.08] hover:text-white hover:border-white/[0.18]'
               }`}
             >
               {preset}
@@ -717,17 +717,17 @@ export const HazardSimulatorPage = ({
           </div>
 
           {/* Sync to Backend Button */}
-          <div className="bg-space-panel border border-space-border rounded-xl p-4 shadow-lg space-y-3">
+          <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 shadow-lg space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-space-dim font-mono">Backend Synchronization:</span>
-              <span className="px-2 py-0.5 rounded bg-space-bg text-space-cyan font-mono text-[11px] border border-space-cyan/30">
+              <span className="text-slate-400 font-mono">Backend Synchronization:</span>
+              <span className="px-2 py-0.5 rounded bg-black/40 text-sky-300 font-mono tabular-nums text-[11px] border border-[#1A56DB]/40">
                 Pattern: {simulatedVitals.dominantPattern} &bull; {backendMode}
               </span>
             </div>
             <button
               onClick={handleSendToBackend}
               disabled={isSimulatingBackend}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-space-cyan text-space-bg font-bold hover:bg-space-cyan/90 transition shadow-md shadow-space-cyan/20 disabled:opacity-50 text-xs"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#0B3D91] hover:bg-[#1A56DB] text-white font-bold transition shadow-sm disabled:opacity-50 text-xs"
             >
               <Play className="w-4 h-4 fill-current" />
               <span>
@@ -736,10 +736,10 @@ export const HazardSimulatorPage = ({
             </button>
             {backendFeedback && (
               <div
-                className={`p-2.5 rounded-lg text-[11px] font-mono border flex items-start gap-2 ${
+                className={`p-2.5 rounded-lg text-[11px] font-mono tabular-nums border flex items-start gap-2 ${
                   backendFeedback.isPending
-                    ? 'bg-space-amber-muted/30 border-space-amber/40 text-space-amber'
-                    : 'bg-space-emerald-muted/30 border-space-emerald/40 text-space-emerald'
+                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                    : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
                 }`}
               >
                 {backendFeedback.isPending ? (
@@ -750,7 +750,7 @@ export const HazardSimulatorPage = ({
                 <span>{backendFeedback.message}</span>
               </div>
             )}
-            <p className="text-[10px] text-space-dim font-mono text-center">
+            <p className="text-[10px] text-slate-400 font-mono text-center">
               Provenance: SYNTHETIC_SIMULATED &bull; Calibrated with SQLite Baselines
             </p>
           </div>
@@ -761,24 +761,24 @@ export const HazardSimulatorPage = ({
           {/* Real-Time Live Vital Deltas Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {/* Heart Rate */}
-            <div className="bg-space-panel border border-space-border rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-[10px] font-mono text-space-dim uppercase flex items-center justify-between">
+            <div className="bg-space-panel border border-white/[0.08] rounded-xl p-3.5 flex flex-col justify-between shadow-lg">
+              <span className="text-[10px] font-mono tabular-nums text-slate-400 uppercase flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Heart className="w-3.5 h-3.5 text-space-red" /> Heart Rate
+                  <Heart className="w-3.5 h-3.5 text-[#FC3D21]" /> Heart Rate
                 </span>
-                <span className="text-space-dim">Norm: {baseline.heartRate}</span>
+                <span className="text-slate-400">Norm: {baseline.heartRate}</span>
               </span>
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-xl font-bold font-mono text-space-text">
-                  {simulatedVitals.heartRate} <span className="text-xs font-normal text-space-dim">bpm</span>
+                <span className="text-xl font-bold font-mono tabular-nums text-white">
+                  {simulatedVitals.heartRate} <span className="text-xs font-normal text-slate-400 font-mono">bpm</span>
                 </span>
                 <span
-                  className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
+                  className={`text-xs font-mono tabular-nums font-bold px-1.5 py-0.5 rounded ${
                     simulatedVitals.deltas.hr > 15
-                      ? 'bg-space-red-muted text-space-red'
+                      ? 'bg-[#FC3D21]/15 text-[#FC3D21]'
                       : simulatedVitals.deltas.hr > 5
-                      ? 'bg-space-amber-muted text-space-amber'
-                      : 'bg-space-bg text-space-dim'
+                      ? 'bg-amber-500/15 text-amber-300'
+                      : 'bg-black/30 text-slate-400'
                   }`}
                 >
                   {simulatedVitals.deltas.hr >= 0 ? `+${simulatedVitals.deltas.hr}` : simulatedVitals.deltas.hr}
@@ -787,24 +787,24 @@ export const HazardSimulatorPage = ({
             </div>
 
             {/* Blood Pressure */}
-            <div className="bg-space-panel border border-space-border rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-[10px] font-mono text-space-dim uppercase flex items-center justify-between">
+            <div className="bg-space-panel border border-white/[0.08] rounded-xl p-3.5 flex flex-col justify-between shadow-lg">
+              <span className="text-[10px] font-mono tabular-nums text-slate-400 uppercase flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Gauge className="w-3.5 h-3.5 text-space-amber" /> Arterial BP
+                  <Gauge className="w-3.5 h-3.5 text-amber-400" /> Arterial BP
                 </span>
-                <span className="text-space-dim">Norm: {baseline.systolicBP}/{baseline.diastolicBP}</span>
+                <span className="text-slate-400">Norm: {baseline.systolicBP}/{baseline.diastolicBP}</span>
               </span>
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-xl font-bold font-mono text-space-text">
+                <span className="text-xl font-bold font-mono tabular-nums text-white">
                   {simulatedVitals.systolicBP}/{simulatedVitals.diastolicBP}
                 </span>
                 <span
-                  className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
+                  className={`text-xs font-mono tabular-nums font-bold px-1.5 py-0.5 rounded ${
                     simulatedVitals.deltas.sys < -15
-                      ? 'bg-space-red-muted text-space-red'
+                      ? 'bg-[#FC3D21]/15 text-[#FC3D21]'
                       : simulatedVitals.deltas.sys > 15
-                      ? 'bg-space-amber-muted text-space-amber'
-                      : 'bg-space-bg text-space-dim'
+                      ? 'bg-amber-500/15 text-amber-300'
+                      : 'bg-black/30 text-slate-400'
                   }`}
                 >
                   {simulatedVitals.deltas.sys >= 0 ? `+${simulatedVitals.deltas.sys}` : simulatedVitals.deltas.sys}
@@ -813,24 +813,24 @@ export const HazardSimulatorPage = ({
             </div>
 
             {/* SpO2 */}
-            <div className="bg-space-panel border border-space-border rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-[10px] font-mono text-space-dim uppercase flex items-center justify-between">
+            <div className="bg-space-panel border border-white/[0.08] rounded-xl p-3.5 flex flex-col justify-between shadow-lg">
+              <span className="text-[10px] font-mono tabular-nums text-slate-400 uppercase flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Wind className="w-3.5 h-3.5 text-space-cyan" /> SpO2 Saturation
+                  <Wind className="w-3.5 h-3.5 text-sky-400" /> SpO2 Saturation
                 </span>
-                <span className="text-space-dim">Norm: {baseline.spo2}%</span>
+                <span className="text-slate-400">Norm: {baseline.spo2}%</span>
               </span>
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-xl font-bold font-mono text-space-text">
+                <span className="text-xl font-bold font-mono tabular-nums text-white">
                   {simulatedVitals.spo2}%
                 </span>
                 <span
-                  className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
+                  className={`text-xs font-mono tabular-nums font-bold px-1.5 py-0.5 rounded ${
                     simulatedVitals.deltas.spo2 < -3.0
-                      ? 'bg-space-red-muted text-space-red'
+                      ? 'bg-[#FC3D21]/15 text-[#FC3D21]'
                       : simulatedVitals.deltas.spo2 < -1.0
-                      ? 'bg-space-amber-muted text-space-amber'
-                      : 'bg-space-bg text-space-dim'
+                      ? 'bg-amber-500/15 text-amber-300'
+                      : 'bg-black/30 text-slate-400'
                   }`}
                 >
                   {simulatedVitals.deltas.spo2 >= 0 ? `+${simulatedVitals.deltas.spo2}%` : `${simulatedVitals.deltas.spo2}%`}
@@ -839,24 +839,24 @@ export const HazardSimulatorPage = ({
             </div>
 
             {/* Core Temperature */}
-            <div className="bg-space-panel border border-space-border rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-[10px] font-mono text-space-dim uppercase flex items-center justify-between">
+            <div className="bg-space-panel border border-white/[0.08] rounded-xl p-3.5 flex flex-col justify-between shadow-lg">
+              <span className="text-[10px] font-mono tabular-nums text-slate-400 uppercase flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Thermometer className="w-3.5 h-3.5 text-space-emerald" /> Core Temp
+                  <Thermometer className="w-3.5 h-3.5 text-emerald-400" /> Core Temp
                 </span>
-                <span className="text-space-dim">Norm: {baseline.coreTemp}°C</span>
+                <span className="text-slate-400">Norm: {baseline.coreTemp}°C</span>
               </span>
               <div className="flex items-baseline justify-between mt-2">
-                <span className="text-xl font-bold font-mono text-space-text">
+                <span className="text-xl font-bold font-mono tabular-nums text-white">
                   {simulatedVitals.coreTemp}°C
                 </span>
                 <span
-                  className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
+                  className={`text-xs font-mono tabular-nums font-bold px-1.5 py-0.5 rounded ${
                     simulatedVitals.deltas.temp > 1.0
-                      ? 'bg-space-red-muted text-space-red'
+                      ? 'bg-[#FC3D21]/15 text-[#FC3D21]'
                       : simulatedVitals.deltas.temp > 0.4
-                      ? 'bg-space-amber-muted text-space-amber'
-                      : 'bg-space-bg text-space-dim'
+                      ? 'bg-amber-500/15 text-amber-300'
+                      : 'bg-black/30 text-slate-400'
                   }`}
                 >
                   {simulatedVitals.deltas.temp >= 0 ? `+${simulatedVitals.deltas.temp}°C` : `${simulatedVitals.deltas.temp}°C`}
@@ -1121,12 +1121,15 @@ export const HazardSimulatorPage = ({
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-space-panel border border-space-border-light p-2.5 rounded-lg shadow-xl text-xs font-mono">
-                            <p className="text-space-cyan font-bold mb-1">Time Elapsed: {label}</p>
+                          <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg px-3 py-2 shadow-xl text-xs font-mono tabular-nums">
+                            <p className="text-sky-400 font-bold mb-1.5">Elapsed: {label}</p>
                             {payload.map((entry, idx) => (
-                              <div key={idx} className="flex justify-between gap-3 text-space-text py-0.5">
-                                <span style={{ color: entry.color }}>{entry.name}:</span>
-                                <span className="font-bold">{entry.value}</span>
+                              <div key={idx} className="flex justify-between gap-4 text-white py-0.5">
+                                <span className="text-slate-400 flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                  {entry.name}:
+                                </span>
+                                <span className="font-semibold">{entry.value}</span>
                               </div>
                             ))}
                           </div>
@@ -1135,21 +1138,48 @@ export const HazardSimulatorPage = ({
                       return null;
                     }}
                   />
+                  {/* NASA Blue Baselines */}
                   <ReferenceLine
                     y={baseline.heartRate}
-                    stroke="#EF4444"
+                    stroke="#3B82F6"
                     strokeDasharray="3 3"
-                    label={{ value: `HR Base (${baseline.heartRate})`, fill: '#EF4444', fontSize: 9, position: 'insideTopLeft' }}
+                    label={{ value: `BASE HR (${baseline.heartRate})`, fill: '#3B82F6', fontSize: 9, position: 'insideTopLeft' }}
                   />
                   <ReferenceLine
                     y={baseline.systolicBP}
-                    stroke="#F59E0B"
+                    stroke="#3B82F6"
                     strokeDasharray="3 3"
-                    label={{ value: `Sys Base (${baseline.systolicBP})`, fill: '#F59E0B', fontSize: 9, position: 'insideBottomLeft' }}
+                    label={{ value: `BASE SYS (${baseline.systolicBP})`, fill: '#3B82F6', fontSize: 9, position: 'insideBottomLeft' }}
                   />
-                  <Line type="monotone" dataKey="heartRate" name="Heart Rate (bpm)" stroke="#EF4444" strokeWidth={2} dot={false} />
+                  {/* NASA Vector Red Hypoxia Threshold */}
+                  <ReferenceLine
+                    y={94}
+                    stroke="#FC3D21"
+                    strokeDasharray="4 4"
+                    label={{ value: 'CRITICAL SPO2 (94%)', fill: '#FC3D21', fontSize: 9, position: 'insideBottomRight' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="heartRate"
+                    name="Heart Rate (bpm)"
+                    stroke="#FC3D21"
+                    strokeWidth={2}
+                    dot={(p) => {
+                      const { cx, cy, index } = p;
+                      if (index === trajectoryPoints.length - 1) {
+                        return (
+                          <g key={`edge-dot-haz-hr-${index}`}>
+                            <circle cx={cx} cy={cy} r={7} fill="#FC3D21" fillOpacity={0.3} />
+                            <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#FC3D21" strokeWidth={2} />
+                          </g>
+                        );
+                      }
+                      return <circle key={`dot-haz-hr-${index}`} cx={cx} cy={cy} r={0} />;
+                    }}
+                    activeDot={{ r: 4 }}
+                  />
                   <Line type="monotone" dataKey="systolicBP" name="Systolic BP (mmHg)" stroke="#F59E0B" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="spo2" name="SpO2 (%)" stroke="#06B6D4" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="spo2" name="SpO2 (%)" stroke="#38BDF8" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="respiratoryRate" name="Respiration (br/m)" stroke="#10B981" strokeWidth={1.5} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>

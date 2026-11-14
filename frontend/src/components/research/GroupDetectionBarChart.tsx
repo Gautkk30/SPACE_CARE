@@ -71,32 +71,32 @@ export const GroupDetectionBarChart: React.FC<Props> = ({ groups }) => {
     if (active && payload && payload.length) {
       const data: TransformedGroupData = payload[0].payload;
       return (
-        <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs shadow-xl backdrop-blur">
-          <p className="font-bold text-white mb-1.5">{data.name} ({data.cohort})</p>
+        <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg p-3 text-xs font-mono tabular-nums shadow-xl">
+          <p className="font-bold text-sky-400 mb-1.5">{data.name} ({data.cohort})</p>
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-4 text-sky-400">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-sky-400 inline-block" />
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#3B82F6] inline-block" />
                 PRE (Baseline):
               </span>
-              <span className="font-semibold">{data.preRate}%</span>
+              <span className="font-semibold text-white">{data.preRate}%</span>
             </div>
             <p className="text-[10px] text-slate-400 pl-4">
               Range: {data.preMin}% &ndash; {data.preMax}% (n={data.preSamples})
             </p>
 
             <div className="flex items-center justify-between gap-4 text-indigo-400 pt-1">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-indigo-400 inline-block" />
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#818CF8] inline-block" />
                 POST (Bed Rest):
               </span>
-              <span className="font-semibold">{data.postRate}%</span>
+              <span className="font-semibold text-white">{data.postRate}%</span>
             </div>
             <p className="text-[10px] text-slate-400 pl-4">
               Range: {data.postMin}% &ndash; {data.postMax}% (n={data.postSamples})
             </p>
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-500">
+          <div className="mt-2 pt-2 border-t border-white/10 text-[10px] text-slate-400">
             Note: Technical hybridization percentage, not clinical outcome.
           </div>
         </div>

@@ -20,7 +20,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             <Radio className="w-3.5 h-3.5 text-space-cyan" />
             Mission Clock
           </span>
-          <span className="text-base font-semibold text-space-text mt-1 font-mono">
+          <span className="text-base font-semibold text-space-text mt-1 font-mono tabular-nums">
             MET Day {summary.missionElapsedDays}
           </span>
           <span className="text-[11px] text-space-muted truncate">
@@ -35,14 +35,14 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             Crew Status
           </span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-base font-semibold text-space-text font-mono">
+            <span className="text-base font-semibold text-space-text font-mono tabular-nums">
               {summary.nominalCrewCount}/{summary.totalCrewCount}
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-space-emerald-muted text-space-emerald border border-space-emerald/30 font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
               Nominal
             </span>
           </div>
-          <span className="text-[11px] text-space-amber">
+          <span className="text-[11px] text-amber-400/90 font-mono tabular-nums">
             {summary.cautionCrewCount} Crew in Caution
           </span>
         </div>
@@ -50,19 +50,19 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
         {/* Active Early Warnings */}
         <div className="flex flex-col">
           <span className="text-xs uppercase tracking-wider text-space-dim flex items-center gap-1.5 font-medium">
-            <AlertTriangle className="w-3.5 h-3.5 text-space-amber" />
+            <AlertTriangle className="w-3.5 h-3.5 text-[#FC3D21]" />
             Active Warnings
           </span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-base font-semibold text-space-amber font-mono">
+            <span className="text-base font-semibold text-[#FC3D21] font-mono tabular-nums">
               {activeAlertCount}
             </span>
             {activeAlertCount > 0 ? (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-space-amber-muted text-space-amber border border-space-amber/30 animate-pulse font-medium">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[#FC3D21]/15 text-[#FC3D21] border border-[#FC3D21]/40 animate-pulse font-medium">
                 Attention Req.
               </span>
             ) : (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-space-emerald-muted text-space-emerald border border-space-emerald/30 font-medium">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
                 Clear
               </span>
             )}

@@ -449,12 +449,16 @@ class SpacecareApiService {
       };
     }
 
-    const crewIds = ['astro_01', 'astro_02', 'astro_03', 'astro_04'];
     try {
-      const allResults = await Promise.all(crewIds.map((id) => this.getAstronautAlerts(id)));
+      const astroRes = await this.getAstronauts();
+      const activeCrew = (astroRes.data && Array.isArray(astroRes.data) && astroRes.data.length > 0)
+        ? astroRes.data
+        : [{ id: 'astro_03' }];
+
+      const allResults = await Promise.all(activeCrew.map((c) => this.getAstronautAlerts(c.id)));
       const anyLive = allResults.some((r) => r.mode === 'LIVE_API');
       const mergedAlerts = allResults.flatMap((r) => r.data || []);
-      if (anyLive && mergedAlerts.length > 0) {
+      if (anyLive) {
         return {
           data: mergedAlerts.map((a) => convertAlertResponseToHealthAlert(a, {})),
           mode: 'LIVE_API',
