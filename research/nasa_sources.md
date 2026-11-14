@@ -8,7 +8,7 @@ This document catalogues the official NASA data repositories, APIs, and scientif
 
 ## 1. NASA Open Science Data Repository (OSDR)
 - **Portal URL**: [https://osdr.nasa.gov/](https://osdr.nasa.gov/)
-- **API Documentation**: [https://osdr.nasa.gov/osdr/data/api](https://osdr.nasa.gov/osdr/data/api)
+-- **API Documentation**: https://api.nasa.gov/
 - **Scope**: Multi-omics, biological, and physiological data from spaceflight and ground analog studies (including GeneLab and Ames Life Sciences Data Archive data).
 - **Target Application**: Baseline physiological responses to microgravity and ionizing radiation.
 
@@ -28,18 +28,17 @@ This document catalogues the official NASA data repositories, APIs, and scientif
   5. Hostile/Closed Environments (HCE)
 - **Target Application**: Risk models, mitigation protocols, and early warning threshold definitions.
 
-## 4. NASA Space Weather Database Of Notifications, Knowledge, Innovations (DONKI)
-- **Portal URL**: [https://kauai.ccmc.gsfc.nasa.gov/DONKI/](https://kauai.ccmc.gsfc.nasa.gov/DONKI/)
-- **API URL**: [https://api.nasa.gov/](https://api.nasa.gov/) (`/DONKI/CME`, `/DONKI/FLR`, `/DONKI/SEP`)
-- **Scope**: Solar flares, coronal mass ejections (CMEs), geomagnetic storms, and solar energetic particle (SEP) events.
-- **Target Application**: Space environmental radiation alerting and solar storm risk forecasting.
 
----
+## 4. NASA Community Coordinated Modeling Center (CCMC) DONKI
 
-## Research Findings & Integration Notes
+- **Portal URL**: https://ccmc.gsfc.nasa.gov/DONKI/
+- **API Base URL**: https://ccmc.gsfc.nasa.gov/DONKI-API/get/
+- **Documentation**: https://ccmc.gsfc.nasa.gov/tools/DONKI/
+- **Scope**: Solar flares, coronal mass ejections (CMEs), geomagnetic storms, solar energetic particle (SEP) events, and related space-weather notifications.
+- **Target Application**: Space-weather event context for mission monitoring and research.
 
-*Status: In Progress (Team Member 1 - Scientific Research Lead)*
+**Migration note:** NASA CCMC migrated DONKI to its new official URLs on September 30, 2026. Automated integrations must use the new API base URL.
 
-- [ ] **OSDR Exploration**: Catalog relevant flight study IDs focusing on human analogs (e.g., bed-rest studies) and biomarker shifts.
-- [ ] **DONKI API Query Validation**: Test solar particle event query schemas and response payload models.
-- [ ] **HRP Evidence Base Mapping**: Map evidence-based mitigation recommendations to detected physiological anomalies.
+**Scientific limitation:** DONKI event information is not a direct measurement of an individual astronaut's radiation dose. Do not convert CME or SEP event records into personal dose values without an independently validated radiation model and appropriate input measurements.
+
+**Data quality note:** CCMC describes DONKI information as suitable for prototyping and research. It should not be represented as a certified operational radiation-warning system.

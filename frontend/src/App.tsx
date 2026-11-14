@@ -13,9 +13,8 @@ import {
 
 import { Osd946QcDashboard } from './components/research/Osd946QcDashboard';
 import { ManualHealthForm } from './components/health/ManualHealthForm';
-
-type DashboardTab = 'telemetry' | 'research' | 'manual';
-
+import { RadiationDashboard } from './components/radiation/RadiationDashboard';
+type DashboardTab = 'telemetry' | 'research' | 'manual' | 'radiation';
 export default function App() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('research');
 
@@ -110,16 +109,35 @@ export default function App() {
             <HeartPulse className="w-4 h-4" />
             <span>Manual Health Input</span>
           </button>
+
+     {/* Radiation Dashboard Tab */}
+            <button
+          onClick={() => setActiveTab('radiation')}
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition cursor-pointer ${
+       activeTab === 'radiation'
+      ? 'bg-amber-500 text-slate-950 font-semibold shadow-lg shadow-amber-500/20'
+      : 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'
+  }`}
+>
+  <Activity className="w-4 h-4" />
+  <span>Space Radiation & DONKI</span>
+  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+    NASA API
+  </span>
+</button>
+
         </nav>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto space-y-8">
-        {activeTab === 'research' ? (
-          <Osd946QcDashboard />
-        ) : activeTab === 'manual' ? (
-          <ManualHealthForm />
-        ) : (
+           {activeTab === 'research' ? (
+  <Osd946QcDashboard />
+) : activeTab === 'manual' ? (
+  <ManualHealthForm />
+) : activeTab === 'radiation' ? (
+  <RadiationDashboard />
+) : (
           /* Mission Telemetry Overview */
           <div className="space-y-8 animate-fadeIn">
             {/* Architecture Status Card */}
