@@ -69,7 +69,7 @@ Compounding these hazards, deep space transit involves communication latencies o
 ## 5. Project Structure
 
 ```
-SPACECARE-2026/
+SPACECARE/
 │
 ├── frontend/                     # React + Vite + TypeScript application
 │   ├── public/
