@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 import os
 
+from app.api.routes import research,health
+
 app = FastAPI(
     title="SPACECARE API",
     description="Intelligent Astronaut Health Monitoring & Early Warning System",
@@ -58,12 +60,10 @@ async def health_check():
     }
 
 # ==============================================================================
-# Route registrations (to be integrated as modules are completed by Member 3):
-# - app.include_router(astronauts.router, prefix="/api/v1/astronauts", tags=["Astronauts"])
-# - app.include_router(vitals.router, prefix="/api/v1/vitals", tags=["Vitals"])
-# - app.include_router(radiation.router, prefix="/api/v1/radiation", tags=["Radiation"])
-# - app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+# Route registrations:
 # ==============================================================================
+app.include_router(research.router, prefix="/api/v1/research", tags=["Research"])
+app.include_router(health.router, prefix="/api/v1/vitals", tags=["Vitals"])
 
 if __name__ == "__main__":
     import uvicorn

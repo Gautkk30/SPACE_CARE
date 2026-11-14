@@ -1,7 +1,7 @@
-"Group","Time","Samples","AverageDetection","Minimum","Maximum"
-"CON","POST","7","15.65","13.26","19.89"
-"CON","PRE","7","15.33","12.75","19.5"
-"EX","POST","7","16.56","11.22","24.13"
-"EX","PRE","7","15.95","11.26","21.5"
-"FLY","POST","8","13.79","12.12","15.73"
-"FLY","PRE","8","13.65","12.36","14.99"
+Group,Time,Samples,AverageDetection,Minimum,Maximum
+CON,POST,7,15.65,13.26,19.89
+CON,PRE,7,15.33,12.75,19.5
+EX,POST,7,16.56,11.22,24.13
+EX,PRE,7,15.95,11.26,21.5
+FLY,POST,8,13.79,12.12,15.73
+FLY,PRE,8,13.65,12.36,14.99
