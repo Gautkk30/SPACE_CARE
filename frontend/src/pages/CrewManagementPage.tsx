@@ -287,7 +287,9 @@ export const CrewManagementPage = ({
               Reference clinical norms established during NASA pre-flight qualification protocol.
             </p>
           </div>
-          <span className="text-xs font-mono text-space-dim">All 4 Crew Members</span>
+          <span className="text-xs font-mono text-space-dim">
+            {crew.length === 1 ? '1 Active Crew Member' : `All ${crew.length} Crew Members`}
+          </span>
         </div>
 
         <div className="overflow-x-auto">

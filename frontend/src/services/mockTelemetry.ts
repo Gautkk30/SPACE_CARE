@@ -970,7 +970,7 @@ export const MOCK_ALERTS: HealthAlert[] = [
 export const MOCK_MISSION_SUMMARY: MissionSummary = {
   missionName: 'ISS EXPEDITION 75 • DEEP SPACE ANALOG',
   missionElapsedDays: 84,
-  totalCrewCount: 4,
+  totalCrewCount: MOCK_ASTRONAUTS.length,
   nominalCrewCount: 2,
   cautionCrewCount: 2,
   alertCrewCount: 0,

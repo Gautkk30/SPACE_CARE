@@ -186,7 +186,9 @@ export const DashboardLayout = ({
           {/* Astronaut Selector Dropdown */}
           <div className="relative">
             <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.14] rounded-lg px-2.5 py-1.5 text-xs transition">
-              <span className="text-slate-400 text-[11px] font-mono uppercase tracking-wider hidden sm:inline">Crew:</span>
+              <span className="text-slate-400 text-[11px] font-mono uppercase tracking-wider hidden sm:inline">
+                Crew ({crew.length}):
+              </span>
               <select
                 value={selectedAstronautId}
                 onChange={(e) => onSelectAstronaut(e.target.value)}

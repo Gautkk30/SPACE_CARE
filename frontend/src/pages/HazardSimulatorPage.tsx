@@ -425,7 +425,7 @@ export const HazardSimulatorPage = ({
           {/* Target Astronaut selector */}
           <div className="flex items-center gap-2 bg-space-panel border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs">
             <User className="w-3.5 h-3.5 text-sky-400" />
-            <span className="text-slate-400 hidden sm:inline font-mono">Subject:</span>
+            <span className="text-slate-400 hidden sm:inline font-mono">Subject ({crew.length}):</span>
             <select
               value={selectedAstronautId}
               onChange={(e) => onSelectAstronaut(e.target.value)}

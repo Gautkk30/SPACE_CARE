@@ -36,14 +36,18 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
           </span>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-base font-semibold text-space-text font-mono tabular-nums">
-              {summary.nominalCrewCount}/{summary.totalCrewCount}
+              {summary.nominalCrewCount}/{Math.max(summary.totalCrewCount || 1, 1)}
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
               Nominal
             </span>
           </div>
           <span className="text-[11px] text-amber-400/90 font-mono tabular-nums">
-            {summary.cautionCrewCount} Crew in Caution
+            {summary.cautionCrewCount > 0
+              ? `${summary.cautionCrewCount} Crew in Caution`
+              : summary.totalCrewCount === 1
+              ? '1 Active Crew Member'
+              : 'All Crew Nominal'}
           </span>
         </div>
 

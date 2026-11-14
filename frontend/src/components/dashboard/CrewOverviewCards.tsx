@@ -46,10 +46,12 @@ export const CrewOverviewCards: React.FC<CrewOverviewCardsProps> = ({
           <Activity className="w-4 h-4 text-sky-400" />
           Expedition Crew Health Roster
         </h2>
-        <span className="text-xs text-slate-400">Select astronaut to inspect biometrics</span>
+        <span className="text-xs text-slate-400 font-mono tabular-nums">
+          <strong className="text-white">{crew.length}</strong> {crew.length === 1 ? 'Active Crew Member' : 'Active Crew Members'} &bull; Select to inspect
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${crew.length <= 2 ? 'lg:grid-cols-2' : crew.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3.5`}>
         {crew.map((member) => {
           const isSelected = member.id === selectedAstronautId;
 

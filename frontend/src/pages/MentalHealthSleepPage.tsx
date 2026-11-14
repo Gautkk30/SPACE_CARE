@@ -368,7 +368,7 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
 
           {/* Crew Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-space-dim">Astronaut:</span>
+            <span className="text-xs font-mono text-space-dim">Astronaut ({crew.length}):</span>
             <select
               value={selectedCrewId}
               onChange={(e) => {

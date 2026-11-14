@@ -416,7 +416,7 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                 {/* Astronaut Selector */}
                 <div>
                   <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-                    Astronaut Subject
+                    Astronaut Subject ({crew.length})
                   </label>
                   <select
                     value={selectedAstronautId}

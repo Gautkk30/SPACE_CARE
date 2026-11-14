@@ -37,6 +37,7 @@ import { spacecareApi, ConnectionMode } from '../services/api';
 
 interface TelemetryContextValue {
   crew: AstronautProfile[];
+  astronauts: AstronautProfile[];
   selectedAstronautId: string;
   setSelectedAstronautId: (id: string) => void;
   selectedAstronaut: AstronautProfile;
@@ -865,6 +866,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return {
       ...MOCK_MISSION_SUMMARY,
+      totalCrewCount: enrichedCrew.length,
       nominalCrewCount: nominalCount,
       cautionCrewCount: cautionCount,
       alertCrewCount: alertCount,
@@ -876,6 +878,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     <TelemetryContext.Provider
       value={{
         crew: enrichedCrew,
+        astronauts: enrichedCrew,
         selectedAstronautId,
         setSelectedAstronautId,
         selectedAstronaut,
