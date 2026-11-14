@@ -2,87 +2,79 @@
 import gzip
 import re
 import statistics
+from collections import defaultdict
 from pathlib import Path
 
-DATA_DIR = Path("data/raw/nasa/osd946")
+ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT / "data" / "raw" / "nasa" / "osd946"
 RAW_DIR = DATA_DIR / "miRNA-array"
 
 SAMPLE_OUTPUT = DATA_DIR / "qc_summary.csv"
 GROUP_OUTPUT = DATA_DIR / "qc_group_summary.csv"
 
-TOTAL_EXPECTED_PROBES = 50980
+FILENAME_PATTERN = re.compile(
+    r"_(CON|EX|FLY)__?(\d+)_(PRE|POST)_",
+    re.IGNORECASE,
+)
 
 
-def parse_metadata(filename):
-    gsm = re.search(r"(GSM\d+)", filename, re.I)
-    meta = re.search(
-        r"_(CON|EX|FLY)__?(\d+)_(PRE|POST)_",
-        filename,
-        re.I
-    )
-
-    if not gsm or not meta:
-        raise ValueError(f"Cannot parse sample metadata: {filename}")
-
-    return (
-        gsm.group(1).upper(),
-        int(meta.group(2)),
-        meta.group(1).upper(),
-        meta.group(3).upper()
-    )
-
-
-def calculate_sample(file_path):
-    gsm, subject, group, time = parse_metadata(file_path.name)
-
-    in_features = False
-    headers = None
+def read_sample(file_path):
+    header = None
     total_probes = 0
     detected_probes = 0
 
     with gzip.open(
-        file_path,
-        "rt",
-        encoding="utf-8-sig",
-        errors="replace",
-        newline=""
+        file_path, "rt", encoding="utf-8-sig", newline=""
     ) as handle:
-
         reader = csv.reader(handle, delimiter="\t")
 
         for row in reader:
             if not row:
                 continue
 
-            if row[0].strip() == "FEATURES":
-                headers = row
-                required = {"SystematicName", "gIsGeneDetected"}
+            record_type = row[0].strip().upper()
 
-                if not required.issubset(set(headers)):
+            # Actual column names are on the FEATURES row.
+            if record_type == "FEATURES":
+                header = [value.strip() for value in row[1:]]
+
+                required = {"SystematicName", "gIsGeneDetected"}
+                missing = required - set(header)
+
+                if missing:
                     raise ValueError(
-                        f"Required columns missing in {file_path.name}"
+                        f"{file_path.name}: missing columns {missing}"
                     )
 
-                systematic_index = headers.index("SystematicName")
-                detected_index = headers.index("gIsGeneDetected")
-                in_features = True
+                systematic_index = header.index("SystematicName")
+                detected_index = header.index("gIsGeneDetected")
                 continue
 
-            if not in_features or row[0].strip() != "DATA":
+            if record_type != "DATA" or header is None:
                 continue
 
-            if len(row) <= max(systematic_index, detected_index):
+            values = row[1:]
+
+            if len(values) < len(header):
                 continue
 
-            systematic_name = row[systematic_index].strip()
+            systematic_name = values[systematic_index].strip()
 
+            # Count human miRNA probes only.
             if not systematic_name.lower().startswith("hsa-"):
                 continue
 
-            total_probes += 1
-            detected_value = row[detected_index].strip().lower()
+            flag = values[detected_index].strip().lower()
 
-            if detected_value in ("1", "true", "yes"):
+            if flag not in {"0", "1", "true", "false"}:
+                raise ValueError(
+                    f"Unexpected detection flag {flag!r} "
+                    f"in {file_path.name}"
+                )
+
+            total_probes += 1
+
+            if flag in {"1", "true"}:
                 detected_probes += 1
 
     if total_probes == 0:
@@ -90,94 +82,116 @@ def calculate_sample(file_path):
             f"No human miRNA probes found in {file_path.name}"
         )
 
-    if total_probes != TOTAL_EXPECTED_PROBES:
-        print(
-            f"WARNING: {file_path.name}: expected "
-            f"{TOTAL_EXPECTED_PROBES} probes, found {total_probes}"
-        )
+    detection_percent = round(
+        detected_probes / total_probes * 100, 2
+    )
 
-    percentage = round(detected_probes / total_probes * 100, 2)
-
-    return {
-        "Sample": file_path.name,
-        "GSM": gsm,
-        "Subject": subject,
-        "Group": group,
-        "Time": time,
-        "TotalProbes": total_probes,
-        "DetectedProbes": detected_probes,
-        "DetectionPercent": percentage
-    }
+    return total_probes, detected_probes, detection_percent
 
 
 def main():
     files = sorted(RAW_DIR.glob("*.txt.gz"))
 
     if len(files) != 44:
-        raise RuntimeError(
-            f"Expected 44 raw files, found {len(files)}. "
-            "Check the raw data directory before proceeding."
+        raise ValueError(
+            f"Expected 44 raw files, found {len(files)} in {RAW_DIR}"
         )
 
-    records = [calculate_sample(path) for path in files]
+    sample_rows = []
+    grouped = defaultdict(list)
 
-    sample_columns = [
-        "Sample",
-        "GSM",
-        "Subject",
-        "Group",
-        "Time",
-        "TotalProbes",
-        "DetectedProbes",
-        "DetectionPercent"
-    ]
+    for index, file_path in enumerate(files, start=1):
+        match = FILENAME_PATTERN.search(file_path.name)
 
-    with SAMPLE_OUTPUT.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=sample_columns)
+        if not match:
+            raise ValueError(
+                f"Cannot extract group/time metadata: {file_path.name}"
+            )
+
+        group, subject, time = match.groups()
+        group = group.upper()
+        time = time.upper()
+
+        total, detected, percentage = read_sample(file_path)
+
+        if total != 50980:
+            print(
+                f"WARNING: {file_path.name}: "
+                f"found {total} human probes, expected 50980"
+            )
+
+        sample_rows.append({
+            "Sample": file_path.name,
+            "TotalProbes": total,
+            "DetectedProbes": detected,
+            "DetectionPercent": percentage,
+        })
+
+        grouped[(group, time)].append(percentage)
+
+        print(
+            f"[{index}/44] {file_path.name}: "
+            f"{detected}/{total} detected ({percentage}%)"
+        )
+
+    # Write individual sample QC.
+    with SAMPLE_OUTPUT.open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "Sample",
+                "TotalProbes",
+                "DetectedProbes",
+                "DetectionPercent",
+            ],
+        )
         writer.writeheader()
-        writer.writerows(records)
+        writer.writerows(sample_rows)
 
-    group_columns = [
-        "Group",
-        "Time",
-        "Samples",
-        "AverageDetection",
-        "Minimum",
-        "Maximum"
-    ]
+    # Write group/timepoint summaries.
+    group_rows = []
 
-    grouped = {}
+    for (group, time), percentages in sorted(grouped.items()):
+        group_rows.append({
+            "Group": group,
+            "Time": time,
+            "Samples": len(percentages),
+            "AverageDetection": round(
+                statistics.mean(percentages), 2
+            ),
+            "Minimum": round(min(percentages), 2),
+            "Maximum": round(max(percentages), 2),
+        })
 
-    for record in records:
-        key = (record["Group"], record["Time"])
-        grouped.setdefault(key, []).append(record["DetectionPercent"])
-
-    with GROUP_OUTPUT.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=group_columns)
+    with GROUP_OUTPUT.open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "Group",
+                "Time",
+                "Samples",
+                "AverageDetection",
+                "Minimum",
+                "Maximum",
+            ],
+        )
         writer.writeheader()
+        writer.writerows(group_rows)
 
-        for (group, time), values in sorted(grouped.items()):
-            writer.writerow({
-                "Group": group,
-                "Time": time,
-                "Samples": len(values),
-                "AverageDetection": round(statistics.mean(values), 2),
-                "Minimum": round(min(values), 2),
-                "Maximum": round(max(values), 2)
-            })
-
-    print("\nOSD-946 QC generation complete")
-    print("Samples processed:", len(records))
-    print("Group/time combinations:", len(grouped))
+    print("\nQC generation completed.")
+    print("Samples:", len(sample_rows))
+    print("Group/time summaries:", len(group_rows))
+    print("Mean detection:", round(
+        statistics.mean(
+            row["DetectionPercent"] for row in sample_rows
+        ), 2
+    ), "%")
     print("Sample CSV:", SAMPLE_OUTPUT)
     print("Group CSV:", GROUP_OUTPUT)
-    print(
-        "Overall mean detection:",
-        round(statistics.mean(
-            r["DetectionPercent"] for r in records
-        ), 2),
-        "%"
-    )
 
 
 if __name__ == "__main__":

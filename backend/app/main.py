@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 import os
 
-from app.api.routes import research
+from app.api.routes import research,health
 
 app = FastAPI(
     title="SPACECARE API",
@@ -63,7 +63,7 @@ async def health_check():
 # Route registrations:
 # ==============================================================================
 app.include_router(research.router, prefix="/api/v1/research", tags=["Research"])
-
+app.include_router(health.router, prefix="/api/v1/vitals", tags=["Vitals"])
 
 if __name__ == "__main__":
     import uvicorn
