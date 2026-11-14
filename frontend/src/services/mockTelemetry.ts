@@ -8,7 +8,7 @@
  * 
  * Research baselines and clinical hazard thresholds are modeled after published
  * open-access standards from:
- * - NASA Human Research Program (HRP) Evidence Books (Cardiovascular, Musculoskeletal, Behavior)
+ * - NASA Human Research Program (HRP) Evidence Books (Cardiovascular, Musculoskeletal, Behavior, Radiation)
  * - NASA Space Flight Human-System Standard (NASA-STD-3001)
  * - NASA Open Science Data Repository (OSDR) - Baseline physiological ranges
  * - NASA Space Weather Database Of Notifications, Knowledge, Innovations (DONKI)
@@ -22,7 +22,12 @@ import {
   MissionSummary,
   VitalTrendPoint,
   CardiovascularMetrics,
+  MusculoskeletalMetrics,
+  MentalHealthMetrics,
+  RadiationEnvironmentData,
   TimeWindow,
+  SleepArchitectureDay,
+  BehavioralCheckIn,
 } from '../types/spacecare';
 
 const CURRENT_ISO = "2026-11-14T10:30:00Z";
@@ -38,7 +43,6 @@ function generateTrends(
   baseResp: number,
   anomalyConfig?: { hour: number; hrDelta: number; spo2Delta: number; sysDelta: number }
 ): Record<TimeWindow, VitalTrendPoint[]> {
-  // 6-Hour trend (last 6 hours leading up to 10:00 UTC)
   const trend6h: VitalTrendPoint[] = [];
   for (let i = 0; i < 6; i++) {
     const hour = (5 + i);
@@ -61,7 +65,6 @@ function generateTrends(
     });
   }
 
-  // 24-Hour trend (hourly resolution 00:00 to 23:00)
   const trend24h: VitalTrendPoint[] = [];
   for (let i = 0; i < 24; i++) {
     const hour = (i + 11) % 24;
@@ -113,7 +116,6 @@ function generateTrends(
     });
   }
 
-  // 7-Day trend (Day 78 through Day 84 with daily resting averages)
   const trend7d: VitalTrendPoint[] = [];
   const days = ['Day 78', 'Day 79', 'Day 80', 'Day 81', 'Day 82', 'Day 83', 'Day 84 (Today)'];
   days.forEach((dayLabel, idx) => {
@@ -141,7 +143,7 @@ function generateTrends(
   };
 }
 
-// Helper for longitudinal cardiovascular history (Day 0 launch to Day 84 current)
+// Helper for longitudinal cardiovascular history (Day 0 to Day 84)
 function generateCardiovascular(
   baseHr: number,
   baseSys: number,
@@ -167,9 +169,9 @@ function generateCardiovascular(
   return {
     restingHrDrift: hrDrift,
     meanArterialPressure: currentMap,
-    strokeVolumeIndex: Number((44.5 - (hrDrift * 0.45)).toFixed(1)), // mL/m²
+    strokeVolumeIndex: Number((44.5 - (hrDrift * 0.45)).toFixed(1)),
     orthostaticToleranceScore: orthoScore,
-    baroreflexSensitivity: Number((14.2 - (hrDrift * 0.3)).toFixed(1)), // ms/mmHg
+    baroreflexSensitivity: Number((14.2 - (hrDrift * 0.3)).toFixed(1)),
     fluidShiftSeverity: fluidShift,
     history,
     referenceStandards: {
@@ -182,21 +184,197 @@ function generateCardiovascular(
   };
 }
 
-// Astronaut 1: Commander Elena Rostova
+// Helper for Musculoskeletal Metrics (12-Week Longitudinal Model)
+function generateMusculoskeletal(
+  femurDelta: number,
+  spineDelta: number,
+  calcaneusDelta: number,
+  muscleDelta: number,
+  aredCompliance: number,
+  treadmillCompliance: number,
+  caRisk: 'LOW' | 'ELEVATED' | 'HIGH',
+  caExcretion: number
+): MusculoskeletalMetrics {
+  const history = [
+    { week: 0, label: 'Pre-Flight', actualBmdLossPct: 0.0, unmitigatedReferenceLossPct: 0.0, leanMuscleLossPct: 0.0, aredCompliancePct: 100 },
+    { week: 2, label: 'Week 2', actualBmdLossPct: Number((femurDelta * 0.15).toFixed(1)), unmitigatedReferenceLossPct: -0.6, leanMuscleLossPct: Number((muscleDelta * 0.2).toFixed(1)), aredCompliancePct: aredCompliance },
+    { week: 4, label: 'Week 4', actualBmdLossPct: Number((femurDelta * 0.35).toFixed(1)), unmitigatedReferenceLossPct: -1.2, leanMuscleLossPct: Number((muscleDelta * 0.4).toFixed(1)), aredCompliancePct: aredCompliance },
+    { week: 6, label: 'Week 6', actualBmdLossPct: Number((femurDelta * 0.55).toFixed(1)), unmitigatedReferenceLossPct: -1.8, leanMuscleLossPct: Number((muscleDelta * 0.6).toFixed(1)), aredCompliancePct: aredCompliance - 2 },
+    { week: 8, label: 'Week 8', actualBmdLossPct: Number((femurDelta * 0.72).toFixed(1)), unmitigatedReferenceLossPct: -2.4, leanMuscleLossPct: Number((muscleDelta * 0.75).toFixed(1)), aredCompliancePct: aredCompliance },
+    { week: 10, label: 'Week 10', actualBmdLossPct: Number((femurDelta * 0.88).toFixed(1)), unmitigatedReferenceLossPct: -3.0, leanMuscleLossPct: Number((muscleDelta * 0.9).toFixed(1)), aredCompliancePct: aredCompliance + 1 },
+    { week: 12, label: 'Week 12 (Now)', actualBmdLossPct: femurDelta, unmitigatedReferenceLossPct: -3.6, leanMuscleLossPct: muscleDelta, aredCompliancePct: aredCompliance },
+  ];
+
+  return {
+    femoralNeckBmdDeltaPct: femurDelta,
+    lumbarSpineBmdDeltaPct: spineDelta,
+    calcaneusBmdDeltaPct: calcaneusDelta,
+    lowerLimbMuscleVolumeDeltaPct: muscleDelta,
+    aredCompliancePct: aredCompliance,
+    treadmillCompliancePct: treadmillCompliance,
+    urinaryCalciumRisk: caRisk,
+    calciumExcretionMgDay: caExcretion,
+    history,
+  };
+}
+
+// Helper for Mental Health & Sleep Architecture (7-Day Actigraphy)
+function generateMentalHealth(
+  circadianScore: number,
+  stressIndex: number,
+  moodScore: number,
+  deepBase: number,
+  remBase: number,
+  lightBase: number,
+  efficiencyBase: number,
+  initialNote: string
+): MentalHealthMetrics {
+  const days = ['Day 78', 'Day 79', 'Day 80', 'Day 81', 'Day 82', 'Day 83', 'Day 84 (Today)'];
+  const sleepArchitecture7d: SleepArchitectureDay[] = days.map((dayLabel, idx) => {
+    const jitter = Math.sin(idx * 1.5) * 0.3;
+    const deep = Number(Math.max(0.8, deepBase + jitter * 0.5).toFixed(1));
+    const rem = Number(Math.max(1.0, remBase + jitter * 0.4).toFixed(1));
+    const light = Number(Math.max(2.5, lightBase + jitter * 0.6).toFixed(1));
+    const total = Number((deep + rem + light).toFixed(1));
+    const eff = Math.min(96, Math.max(68, Math.round(efficiencyBase + jitter * 5)));
+
+    return {
+      dayLabel,
+      date: `2026-11-${(8 + idx).toString().padStart(2, '0')}`,
+      deepSleepHours: deep,
+      remSleepHours: rem,
+      lightSleepHours: light,
+      totalSleepHours: total,
+      sleepEfficiencyPct: eff,
+      targetHours: 8.0,
+      circadianAlignmentScore: Math.round(circadianScore + (idx % 2 === 0 ? 2 : -2)),
+      stressIndex: Math.min(10, Math.max(1, Math.round(stressIndex + (idx % 2 === 0 ? -1 : 1)))),
+    };
+  });
+
+  const weeklyAvgSleepHours = Number(
+    (sleepArchitecture7d.reduce((sum, d) => sum + d.totalSleepHours, 0) / 7).toFixed(1)
+  );
+  const weeklyAvgEfficiencyPct = Math.round(
+    sleepArchitecture7d.reduce((sum, d) => sum + d.sleepEfficiencyPct, 0) / 7
+  );
+
+  const checkInHistory: BehavioralCheckIn[] = [
+    {
+      id: 'CHK-001',
+      timestamp: '2026-11-13T20:45:00Z',
+      moodRating: moodScore,
+      perceivedStress: stressIndex,
+      sleepQuality: Math.round((efficiencyBase / 100) * 5),
+      cognitiveFatigue: stressIndex >= 7,
+      notes: initialNote,
+    },
+  ];
+
+  return {
+    currentCircadianAlignment: circadianScore,
+    currentStressIndex: stressIndex,
+    currentMoodScore: moodScore,
+    weeklyAvgSleepHours,
+    weeklyAvgEfficiencyPct,
+    sleepArchitecture7d,
+    checkInHistory,
+  };
+}
+
+// ------------------------------------------------------------------------------
+// Radiation & Space Weather Data (14-Day Timeline with DONKI Events)
+// ------------------------------------------------------------------------------
+export const MOCK_RADIATION_DATA: RadiationEnvironmentData = {
+  cumulativeMissionDoseMsv: 54.2,
+  currentDosimeterRateMicroGyHr: 42.5,
+  gcrBackgroundRateMicroGyHr: 17.5,
+  speRateMicroGyHr: 25.0,
+  stormShelterStatus: 'ACTIVE_STANDBY',
+  careerLimitMsv: 600,
+  timeline14d: [
+    { day: 1, dateLabel: 'Nov 01', dosimeterRateMicroGyHr: 17.4, gcrComponent: 17.4, speComponent: 0.0, cumulativeDoseMsv: 46.2 },
+    { day: 2, dateLabel: 'Nov 02', dosimeterRateMicroGyHr: 17.8, gcrComponent: 17.8, speComponent: 0.0, cumulativeDoseMsv: 46.6 },
+    { day: 3, dateLabel: 'Nov 03', dosimeterRateMicroGyHr: 18.1, gcrComponent: 18.1, speComponent: 0.0, cumulativeDoseMsv: 47.0 },
+    { day: 4, dateLabel: 'Nov 04', dosimeterRateMicroGyHr: 17.6, gcrComponent: 17.6, speComponent: 0.0, cumulativeDoseMsv: 47.4 },
+    { day: 5, dateLabel: 'Nov 05', dosimeterRateMicroGyHr: 17.9, gcrComponent: 17.9, speComponent: 0.0, cumulativeDoseMsv: 47.8 },
+    { day: 6, dateLabel: 'Nov 06', dosimeterRateMicroGyHr: 18.0, gcrComponent: 18.0, speComponent: 0.0, cumulativeDoseMsv: 48.2 },
+    { day: 7, dateLabel: 'Nov 07', dosimeterRateMicroGyHr: 18.2, gcrComponent: 18.2, speComponent: 0.0, cumulativeDoseMsv: 48.6 },
+    { day: 8, dateLabel: 'Nov 08', dosimeterRateMicroGyHr: 18.3, gcrComponent: 18.3, speComponent: 0.0, cumulativeDoseMsv: 49.0 },
+    { day: 9, dateLabel: 'Nov 09', dosimeterRateMicroGyHr: 22.4, gcrComponent: 17.8, speComponent: 4.6, cumulativeDoseMsv: 49.5, donkiEventNote: 'M1.0 Precursor Solar Flare' },
+    { day: 10, dateLabel: 'Nov 10', dosimeterRateMicroGyHr: 20.1, gcrComponent: 17.7, speComponent: 2.4, cumulativeDoseMsv: 50.0 },
+    { day: 11, dateLabel: 'Nov 11', dosimeterRateMicroGyHr: 19.5, gcrComponent: 17.9, speComponent: 1.6, cumulativeDoseMsv: 50.5 },
+    { day: 12, dateLabel: 'Nov 12', dosimeterRateMicroGyHr: 34.6, gcrComponent: 17.6, speComponent: 17.0, cumulativeDoseMsv: 51.3, donkiEventNote: 'DONKI #CME-2026-11 Halo Arrival' },
+    { day: 13, dateLabel: 'Nov 13', dosimeterRateMicroGyHr: 48.2, gcrComponent: 17.2, speComponent: 31.0, cumulativeDoseMsv: 52.5, donkiEventNote: 'DONKI #SEP-2026-11-A Proton Wave Peak' },
+    { day: 14, dateLabel: 'Nov 14 (Now)', dosimeterRateMicroGyHr: 42.5, gcrComponent: 17.5, speComponent: 25.0, cumulativeDoseMsv: 54.2, donkiEventNote: 'Elevated Flux Decay Window' },
+  ],
+  donkiEvents: [
+    {
+      id: 'DONKI-SEP-2026-11-A',
+      eventType: 'SEP',
+      classification: 'S1 Minor Proton Enhancement (>10 MeV at 25 pfu)',
+      onsetUtc: '2026-11-13T04:20:00Z',
+      peakUtc: '2026-11-13T16:45:00Z',
+      protonFluxLevel: 'S1 Minor',
+      shelterAdvisory: 'Maintain duty within water-wall reinforced service module storm shelter.',
+      source: 'NASA DONKI API FEED',
+    },
+    {
+      id: 'DONKI-CME-2026-11-09',
+      eventType: 'CME',
+      classification: 'Halo Coronal Mass Ejection (Speed ~1150 km/s)',
+      onsetUtc: '2026-11-09T22:15:00Z',
+      peakUtc: '2026-11-12T14:30:00Z',
+      protonFluxLevel: 'Moderate Solar Wind Shock',
+      shelterAdvisory: 'Suspend EVA airlock repressurization and tethered spacewalk prep.',
+      source: 'NASA DONKI API FEED',
+    },
+    {
+      id: 'DONKI-FLR-2026-11-02',
+      eventType: 'FLARE',
+      classification: 'M1.2 Long-Duration Solar X-Ray Flare',
+      onsetUtc: '2026-11-09T18:04:00Z',
+      peakUtc: '2026-11-09T18:42:00Z',
+      protonFluxLevel: 'R1 Minor Radio Blackout',
+      shelterAdvisory: 'Monitor cabin dosimeter live telemetry; nominal orbital shielding active.',
+      source: 'NASA DONKI API FEED',
+    },
+  ],
+  crewDoses: [
+    { astronautId: 'ASTRO-01', astronautName: 'Elena Rostova', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 184.5, careerLimitMsv: 600, careerLimitPct: 30.8 },
+    { astronautId: 'ASTRO-02', astronautName: 'Marcus Vance', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 98.4, careerLimitMsv: 600, careerLimitPct: 16.4 },
+    { astronautId: 'ASTRO-03', astronautName: 'Dr. Kenji Sato', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 156.2, careerLimitMsv: 600, careerLimitPct: 26.0 },
+    { astronautId: 'ASTRO-04', astronautName: 'Sarah Lin', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 54.2, careerLimitMsv: 600, careerLimitPct: 9.0 },
+  ],
+};
+
+// ------------------------------------------------------------------------------
+// Assemble 4 Astronaut Profiles
+// ------------------------------------------------------------------------------
+
+// Elena Rostova
 const elenaTrends = generateTrends(64, 46, 116, 74, 98.4, 36.8, 14);
 const elenaCardio = generateCardiovascular(64, 116, 74, 46, 2, 91, 'Mild Cephalad Shift');
+const elenaMusculo = generateMusculoskeletal(-1.1, -0.9, -1.4, -2.1, 98, 96, 'LOW', 195);
+const elenaMental = generateMentalHealth(92, 3, 4, 1.9, 1.8, 3.6, 91, 'Feeling well adapted. Exercise countermeasure adherence high; cognitive clarity sustained.');
 
-// Astronaut 2: Marcus Vance (Deconditioning & Autonomic Strain)
+// Marcus Vance (Deconditioning & Autonomic Strain)
 const marcusTrends = generateTrends(68, 42, 120, 78, 98.0, 36.9, 14, { hour: 9, hrDelta: 20, spo2Delta: -1.6, sysDelta: 14 });
 const marcusCardio = generateCardiovascular(68, 120, 78, 42, 14, 68, 'Moderate Redistribution');
+const marcusMusculo = generateMusculoskeletal(-1.8, -1.6, -2.2, -4.6, 82, 80, 'ELEVATED', 315);
+const marcusMental = generateMentalHealth(78, 6, 3, 1.2, 1.4, 3.9, 78, 'Post-exercise recovery feeling sluggish. Mild leg heaviness during ergometer intervals.');
 
-// Astronaut 3: Dr. Kenji Sato
+// Dr. Kenji Sato
 const kenjiTrends = generateTrends(60, 52, 114, 72, 98.8, 36.7, 13);
 const kenjiCardio = generateCardiovascular(60, 114, 72, 52, 1, 94, 'Nominal');
+const kenjiMusculo = generateMusculoskeletal(-0.9, -0.7, -1.1, -1.6, 100, 98, 'LOW', 180);
+const kenjiMental = generateMentalHealth(95, 2, 5, 2.1, 2.0, 3.4, 94, 'Sleep quality excellent. Maintaining scheduled mindfulness and circadian light hygiene.');
 
-// Astronaut 4: Sarah Lin (Circadian Strain)
+// Sarah Lin (Circadian Strain)
 const sarahTrends = generateTrends(62, 38, 112, 70, 99.0, 36.8, 14, { hour: 4, hrDelta: 12, spo2Delta: -0.9, sysDelta: 8 });
 const sarahCardio = generateCardiovascular(62, 112, 70, 38, 6, 83, 'Mild Cephalad Shift');
+const sarahMusculo = generateMusculoskeletal(-1.4, -1.2, -1.7, -2.8, 91, 88, 'LOW', 220);
+const sarahMental = generateMentalHealth(64, 7, 2, 0.9, 1.1, 2.8, 69, 'Sleep fragmented due to experiment schedule shift. Experiencing mild morning cognitive fog and screen glare fatigue.');
 
 export const MOCK_ASTRONAUTS: AstronautProfile[] = [
   {
@@ -250,6 +428,8 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     trend24h: elenaTrends['24H'],
     trendsByWindow: elenaTrends,
     cardiovascular: elenaCardio,
+    musculoskeletal: elenaMusculo,
+    mentalHealth: elenaMental,
   },
   {
     id: 'ASTRO-02',
@@ -302,6 +482,8 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     trend24h: marcusTrends['24H'],
     trendsByWindow: marcusTrends,
     cardiovascular: marcusCardio,
+    musculoskeletal: marcusMusculo,
+    mentalHealth: marcusMental,
   },
   {
     id: 'ASTRO-03',
@@ -354,6 +536,8 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     trend24h: kenjiTrends['24H'],
     trendsByWindow: kenjiTrends,
     cardiovascular: kenjiCardio,
+    musculoskeletal: kenjiMusculo,
+    mentalHealth: kenjiMental,
   },
   {
     id: 'ASTRO-04',
@@ -406,6 +590,8 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     trend24h: sarahTrends['24H'],
     trendsByWindow: sarahTrends,
     cardiovascular: sarahCardio,
+    musculoskeletal: sarahMusculo,
+    mentalHealth: sarahMental,
   },
 ];
 

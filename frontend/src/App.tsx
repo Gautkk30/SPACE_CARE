@@ -6,6 +6,9 @@ import { OverviewDashboard } from './pages/OverviewDashboard';
 import { CrewManagementPage } from './pages/CrewManagementPage';
 import { VitalSignsPage } from './pages/VitalSignsPage';
 import { CardiovascularPage } from './pages/CardiovascularPage';
+import { BoneMusclePage } from './pages/BoneMusclePage';
+import { RadiationPage } from './pages/RadiationPage';
+import { MentalHealthSleepPage } from './pages/MentalHealthSleepPage';
 import { PhaseNoticePlaceholder } from './components/dashboard/PhaseNoticePlaceholder';
 
 export default function App() {
@@ -60,6 +63,22 @@ export default function App() {
       case 'cardiovascular':
         return (
           <CardiovascularPage
+            selectedAstronaut={selectedAstronaut}
+          />
+        );
+      case 'bone-muscle':
+        return (
+          <BoneMusclePage
+            selectedAstronaut={selectedAstronaut}
+          />
+        );
+      case 'radiation':
+        return (
+          <RadiationPage />
+        );
+      case 'mental-health':
+        return (
+          <MentalHealthSleepPage
             selectedAstronaut={selectedAstronaut}
           />
         );

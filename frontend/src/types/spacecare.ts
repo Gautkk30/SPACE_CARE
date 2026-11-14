@@ -93,6 +93,110 @@ export interface CardiovascularMetrics {
   };
 }
 
+/* ==============================================================================
+ * Phase 3 Batch 2: Musculoskeletal, Radiation, & Mental Health Interfaces
+ * ============================================================================== */
+
+export interface MusculoskeletalLongitudinalPoint {
+  week: number;
+  label: string; // e.g. "Wk 0", "Wk 4", "Wk 8", "Wk 12"
+  actualBmdLossPct: number; // with ARED countermeasures
+  unmitigatedReferenceLossPct: number; // NASA HRP microgravity unmitigated reference (~1.0-1.5%/month)
+  leanMuscleLossPct: number;
+  aredCompliancePct: number;
+}
+
+export interface MusculoskeletalMetrics {
+  femoralNeckBmdDeltaPct: number; // % change from pre-flight DEXA
+  lumbarSpineBmdDeltaPct: number; // % change from pre-flight DEXA
+  calcaneusBmdDeltaPct: number; // % change from pre-flight ultrasound/DEXA
+  lowerLimbMuscleVolumeDeltaPct: number; // % change in quadriceps/soleus
+  aredCompliancePct: number; // ARED resistance adherence %
+  treadmillCompliancePct: number; // T2 treadmill adherence %
+  urinaryCalciumRisk: 'LOW' | 'ELEVATED' | 'HIGH';
+  calciumExcretionMgDay: number; // urinary calcium mg/day (risk > 300)
+  history: MusculoskeletalLongitudinalPoint[];
+}
+
+export interface RadiationTimelinePoint {
+  day: number;
+  dateLabel: string; // e.g. "Nov 01"
+  dosimeterRateMicroGyHr: number; // total measured rate
+  gcrComponent: number; // Galactic Cosmic Rays
+  speComponent: number; // Solar Particle Event spike
+  cumulativeDoseMsv: number;
+  donkiEventNote?: string;
+}
+
+export interface DonkiSpaceWeatherEvent {
+  id: string;
+  eventType: 'CME' | 'FLARE' | 'SEP' | 'GEOMAGNETIC_STORM';
+  classification: string; // e.g. "M1.2 Flare", "Halo CME (1150 km/s)"
+  onsetUtc: string;
+  peakUtc: string;
+  protonFluxLevel: string; // e.g. "S1 Minor"
+  shelterAdvisory: string;
+  source: 'NASA DONKI API FEED';
+}
+
+export interface RadiationCrewDose {
+  astronautId: string;
+  astronautName: string;
+  cumulativeMissionDoseMsv: number;
+  careerDoseMsv: number;
+  careerLimitMsv: number; // 600 mSv (NASA-STD-3001)
+  careerLimitPct: number;
+}
+
+export interface RadiationEnvironmentData {
+  cumulativeMissionDoseMsv: number;
+  currentDosimeterRateMicroGyHr: number;
+  gcrBackgroundRateMicroGyHr: number;
+  speRateMicroGyHr: number;
+  stormShelterStatus: 'ACTIVE_STANDBY' | 'NOMINAL_OPERATION' | 'SHELTER_MANDATORY';
+  careerLimitMsv: number;
+  timeline14d: RadiationTimelinePoint[];
+  donkiEvents: DonkiSpaceWeatherEvent[];
+  crewDoses: RadiationCrewDose[];
+}
+
+export interface SleepArchitectureDay {
+  dayLabel: string; // e.g. "Day 78", "Day 79"
+  date: string;
+  deepSleepHours: number;
+  remSleepHours: number;
+  lightSleepHours: number;
+  totalSleepHours: number;
+  sleepEfficiencyPct: number;
+  targetHours: number; // 8.0h standard
+  circadianAlignmentScore: number; // 0-100
+  stressIndex: number; // 1-10
+}
+
+export interface BehavioralCheckIn {
+  id: string;
+  timestamp: string; // ISO
+  moodRating: number; // 1-5
+  perceivedStress: number; // 1-10
+  sleepQuality: number; // 1-5
+  cognitiveFatigue: boolean;
+  notes: string;
+}
+
+export interface MentalHealthMetrics {
+  currentCircadianAlignment: number; // 0-100
+  currentStressIndex: number; // 1-10
+  currentMoodScore: number; // 1-5
+  weeklyAvgSleepHours: number;
+  weeklyAvgEfficiencyPct: number;
+  sleepArchitecture7d: SleepArchitectureDay[];
+  checkInHistory: BehavioralCheckIn[];
+}
+
+/* ==============================================================================
+ * Master Astronaut Profile
+ * ============================================================================== */
+
 export interface AstronautProfile {
   id: string;
   name: string;
@@ -114,6 +218,8 @@ export interface AstronautProfile {
   trend24h: VitalTrendPoint[];
   trendsByWindow: Record<TimeWindow, VitalTrendPoint[]>;
   cardiovascular: CardiovascularMetrics;
+  musculoskeletal: MusculoskeletalMetrics;
+  mentalHealth: MentalHealthMetrics;
 }
 
 export interface HealthAlert {
