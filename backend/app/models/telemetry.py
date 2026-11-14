@@ -1,56 +1,83 @@
 """
-Health Telemetry SQLAlchemy model.
-Stores time-series physiological measurements and ML anomaly indicators.
+Telemetry model (SQLAlchemy 2.x).
+Stores timestamped physiological readings, data provenance, and simulation flags.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from typing import Optional, TYPE_CHECKING
+from sqlalchemy import String, Integer, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 from app.database.session import Base
+from app.models.data_source import DataSource
+
+if TYPE_CHECKING:
+    from app.models.astronaut import Astronaut
 
 
-class HealthTelemetry(Base):
-    __tablename__ = "health_telemetry"
+class Telemetry(Base):
+    __tablename__ = "telemetry"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    astronaut_id = Column(String(50), ForeignKey("astronauts.id"), nullable=False, index=True)
-    
-    # Telemetry Timestamp
-    timestamp = Column(
-        DateTime, 
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
+    astronaut_id: Mapped[str] = mapped_column(
+        String(50), 
+        ForeignKey("astronauts.id", ondelete="CASCADE"), 
         nullable=False, 
+        index=True
+    )
+    
+    # Consistent UTC Timestamp
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
         index=True,
         default=lambda: datetime.now(timezone.utc)
     )
 
-    # Core Physiological Metrics
-    heart_rate = Column(Float, nullable=False)                 # Beats per minute (bpm)
-    spo2 = Column(Float, nullable=False)                       # Blood Oxygen Saturation (%)
-    blood_pressure_systolic = Column(Float, nullable=False)    # Systolic blood pressure (mmHg)
-    blood_pressure_diastolic = Column(Float, nullable=False)   # Diastolic blood pressure (mmHg)
-    body_temperature = Column(Float, nullable=False)           # Body temperature (°C)
-    respiration_rate = Column(Float, nullable=False)           # Respiration rate (breaths per min)
+    # Core Physiological Readings
+    heart_rate: Mapped[float] = mapped_column(Float, nullable=False)               # bpm
+    systolic_bp: Mapped[float] = mapped_column(Float, nullable=False)              # mmHg
+    diastolic_bp: Mapped[float] = mapped_column(Float, nullable=False)             # mmHg
+    spo2: Mapped[float] = mapped_column(Float, nullable=False)                     # %
+    body_temperature: Mapped[float] = mapped_column(Float, nullable=False)         # °C
+    respiration_rate: Mapped[float] = mapped_column(Float, nullable=False)         # breaths/min
 
-    # Machine Learning & Early Warning Indicators
-    is_anomaly = Column(Boolean, default=False, index=True)    # Flagged by ML or clinical rule
-    anomaly_score = Column(Float, nullable=True)               # Isolation Forest score (<0 = outlier)
-    anomaly_reasons = Column(String(500), nullable=True)       # Descriptive physiological deviations
-    
-    # Provenance tracking (adheres to NASA challenge transparency rules)
-    data_source = Column(String(100), default="synthetic_simulated", nullable=False)
-    
-    created_at = Column(
-        DateTime, 
+    # Data Provenance & Ethics
+    data_source: Mapped[str] = mapped_column(
+        String(50), 
+        nullable=False, 
+        default=DataSource.SYNTHETIC_SIMULATED.value
+    )
+    is_simulated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    dataset_reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # Metadata creation timestamp
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
 
-    # Relationships
-    astronaut = relationship("Astronaut", back_populates="telemetry")
+    # Relationship
+    astronaut: Mapped["Astronaut"] = relationship("Astronaut", back_populates="telemetry")
+
+    # Compatibility aliases
+    @hybrid_property
+    def blood_pressure_systolic(self) -> float:
+        return self.systolic_bp
+
+    @hybrid_property
+    def blood_pressure_diastolic(self) -> float:
+        return self.diastolic_bp
+
+    @hybrid_property
+    def core_temperature(self) -> float:
+        return self.body_temperature
 
     def __repr__(self) -> str:
         return (
-            f"<HealthTelemetry(id={self.id}, astronaut_id='{self.astronaut_id}', "
-            f"timestamp={self.timestamp}, HR={self.heart_rate}, SpO2={self.spo2}, "
-            f"is_anomaly={self.is_anomaly})>"
+            f"<Telemetry(id={self.id}, astronaut_id='{self.astronaut_id}', "
+            f"timestamp={self.timestamp}, HR={self.heart_rate}, "
+            f"BP={self.systolic_bp}/{self.diastolic_bp}, "
+            f"SpO2={self.spo2}, source='{self.data_source}')>"
         )

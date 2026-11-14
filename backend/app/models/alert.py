@@ -1,49 +1,58 @@
 """
-Alert model for early physiological warnings and protocol recommendations.
-Stores system-generated alerts triggered by ML anomaly detection or rule thresholds.
+Alert model (SQLAlchemy 2.x).
+Stores physiological early warning alerts and countermeasure protocol recommendations.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING
+from sqlalchemy import String, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.session import Base
+
+if TYPE_CHECKING:
+    from app.models.astronaut import Astronaut
 
 
 class Alert(Base):
     __tablename__ = "alerts"
 
-    id = Column(String(50), primary_key=True, index=True)      # e.g., "alt_001"
-    astronaut_id = Column(String(50), ForeignKey("astronauts.id"), nullable=False, index=True)
-    
-    # Alert Classification
-    severity = Column(String(20), nullable=False)              # "INFO", "WARNING", "CRITICAL"
-    category = Column(String(50), nullable=False)              # e.g., "CARDIOVASCULAR", "RESPIRATORY", "THERMAL"
-    
-    # Message & Actionable Guidance
-    # Objective physiological observations, non-diagnostic
-    message = Column(String(255), nullable=False)
-    confidence_score = Column(Float, nullable=False, default=0.85)
-    
-    # Countermeasure / Mitigation Protocol recommendation
-    recommendation = Column(String(500), nullable=False)
-    
-    # Acknowledgment state
-    is_acknowledged = Column(Boolean, default=False, nullable=False)
-    
-    timestamp = Column(
-        DateTime, 
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, index=True)
+    astronaut_id: Mapped[str] = mapped_column(
+        String(50), 
+        ForeignKey("astronauts.id", ondelete="CASCADE"), 
         nullable=False, 
+        index=True
+    )
+    
+    # Alert Severity & Category
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)          # "INFO", "WARNING", "CRITICAL"
+    category: Mapped[str] = mapped_column(String(50), nullable=False)          # "CARDIOVASCULAR", "RESPIRATORY", etc.
+    
+    # Objective non-diagnostic physiological observation
+    message: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    
+    # Operational countermeasure protocol recommendation
+    recommendation: Mapped[str] = mapped_column(String(500), nullable=False)
+    
+    # State tracking
+    is_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    
+    # UTC Timestamps
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
         index=True,
         default=lambda: datetime.now(timezone.utc)
     )
-    created_at = Column(
-        DateTime, 
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
 
     # Relationship
-    astronaut = relationship("Astronaut", back_populates="alerts")
+    astronaut: Mapped["Astronaut"] = relationship("Astronaut", back_populates="alerts")
 
     def __repr__(self) -> str:
         return (

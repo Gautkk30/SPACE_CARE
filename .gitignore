@@ -12,6 +12,9 @@ __pycache__/
 env/
 venv/
 .venv/
+.venv*/
+**/venv/
+**/.venv/
 ENV/
 build/
 develop-eggs/

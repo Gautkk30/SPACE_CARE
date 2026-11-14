@@ -5,7 +5,7 @@ Uses pydantic-settings to manage environment variables with sensible defaults.
 
 from pathlib import Path
 from typing import List, Union
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
 # Base directory of the backend repository
@@ -50,10 +50,11 @@ class Settings(BaseSettings):
     ML_MODEL_PATH: Path = ML_MODEL_DIR / "isolation_forest.joblib"
     ML_SCALER_PATH: Path = ML_MODEL_DIR / "scaler.joblib"
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env",
+        extra="ignore"
+    )
 
 
 settings = Settings()
