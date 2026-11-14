@@ -14,6 +14,7 @@ import { AIAnalysisPage } from './pages/AIAnalysisPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { HealthReportsPage } from './pages/HealthReportsPage';
 import { HazardSimulatorPage } from './pages/HazardSimulatorPage';
+import { ManualHealthInputPage } from './pages/ManualHealthInputPage';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -82,6 +83,15 @@ export default function App() {
         );
       case 'vitals':
         return <VitalSignsPage selectedAstronaut={selectedAstronaut} backendMode={backendMode} />;
+      case 'manual-input':
+        return (
+          <ManualHealthInputPage
+            crew={MOCK_ASTRONAUTS}
+            selectedAstronautId={selectedAstronautId}
+            onSelectAstronaut={setSelectedAstronautId}
+            backendMode={backendMode}
+          />
+        );
       case 'hazard-lab':
         return (
           <HazardSimulatorPage

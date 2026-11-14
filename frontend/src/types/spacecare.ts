@@ -391,6 +391,7 @@ export type TabId =
   | 'overview'
   | 'crew'
   | 'vitals'
+  | 'manual-input'
   | 'hazard-lab'
   | 'cardiovascular'
   | 'bone-muscle'

@@ -251,6 +251,26 @@ class SpacecareApiService {
   }
 
   /**
+   * POST /api/v1/telemetry
+   * Submits a single telemetry reading matching the backend Telemetry model.
+   */
+  async submitTelemetryReading(reading: Omit<TelemetryReading, 'id'>): Promise<ApiResponse<TelemetryReading>> {
+    const fallbackReading: TelemetryReading = {
+      id: Date.now(),
+      ...reading,
+    };
+
+    return this.request<TelemetryReading>(
+      '/api/v1/telemetry',
+      {
+        method: 'POST',
+        body: JSON.stringify(reading),
+      },
+      fallbackReading
+    );
+  }
+
+  /**
    * GET /api/v1/alerts
    */
   async getAlerts(astronautId?: string): Promise<ApiResponse<HealthAlert[]>> {

@@ -24,6 +24,11 @@ const TAB_DESCRIPTIONS: Record<TabId, { title: string; desc: string; backendHook
     desc: 'High-frequency telemetry stream inspector (HRV, SpO2, core temperature, blood pressure, respiration).',
     backendHook: '/api/v1/astronauts/{id}/vitals',
   },
+  'manual-input': {
+    title: 'Manual Health & Physiological Telemetry Entry',
+    desc: 'Clinical-grade manual astronaut vital signs submission workstation aligned with the backend database.',
+    backendHook: '/api/v1/telemetry',
+  },
   'hazard-lab': {
     title: 'NASA-STD-3001 Operational Hazard & Physiology Lab',
     desc: 'Interactive real-time spaceflight hazard simulation and coupled physiological response model.',
