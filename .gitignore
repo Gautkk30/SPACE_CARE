@@ -73,3 +73,8 @@ Thumbs.db
 # OS Generated
 ehthumbs.db
 Desktop.ini
+
+# NASA OSD-946: keep original raw data and metadata out of Git
+/data/raw/nasa/osd946/*
+!/data/raw/nasa/osd946/qc_summary.csv
+!/data/raw/nasa/osd946/qc_group_summary.csv
