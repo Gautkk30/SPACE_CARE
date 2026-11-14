@@ -14,6 +14,7 @@ import { AlertsPage } from './pages/AlertsPage';
 import { HealthReportsPage } from './pages/HealthReportsPage';
 import { HazardSimulatorPage } from './pages/HazardSimulatorPage';
 import { ManualHealthInputPage } from './pages/ManualHealthInputPage';
+import { Osd946QcDashboard } from './components/research/Osd946QcDashboard';
 
 function SpacecareAppContent() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -77,7 +78,7 @@ function SpacecareAppContent() {
       case 'cardiovascular':
         return <CardiovascularPage selectedAstronaut={selectedAstronaut} />;
       case 'bone-muscle':
-        return <BoneMusclePage selectedAstronaut={selectedAstronaut} />;
+        return <BoneMusclePage selectedAstronaut={selectedAstronaut} onNavigateTab={setActiveTab} />;
       case 'radiation':
         return <RadiationPage />;
       case 'mental-health':
@@ -101,6 +102,8 @@ function SpacecareAppContent() {
             onSelectAstronaut={setSelectedAstronautId}
           />
         );
+      case 'research':
+        return <Osd946QcDashboard />;
       default:
         return (
           <OverviewDashboard

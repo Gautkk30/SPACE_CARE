@@ -20,6 +20,7 @@ import {
   Clock,
   Layers,
 } from 'lucide-react';
+import { RadiationDashboard } from '../components/radiation/RadiationDashboard';
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -55,6 +56,7 @@ const DarkRadiationTooltip = ({ active, payload, label }: CustomTooltipProps) =>
 
 export const RadiationPage = () => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'crew_limits'>('timeline');
+  const [donkiMode, setDonkiMode] = useState<'live' | 'log'>('live');
   const rad = MOCK_RADIATION_DATA;
 
   const isShelterActive = rad.stormShelterStatus !== 'NOMINAL_OPERATION';
@@ -269,7 +271,7 @@ export const RadiationPage = () => {
 
       {/* NASA DONKI Space Weather Events Log */}
       <div className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-space-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-space-border/60">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-space-muted flex items-center gap-2">
               <Radio className="w-4 h-4 text-space-cyan" />
@@ -279,40 +281,68 @@ export const RadiationPage = () => {
               Live external events synchronized from NASA Space Weather Database Of Notifications, Knowledge, Innovations.
             </p>
           </div>
-          <span className="text-xs font-mono text-space-cyan px-2.5 py-0.5 rounded bg-space-cyan-muted border border-space-cyan/30">
-            DONKI API LINKED
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          {rad.donkiEvents.map((evt) => (
-            <div key={evt.id} className="bg-space-bg/70 border border-space-border rounded-lg p-3.5 flex flex-col justify-between space-y-2">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-mono font-bold text-space-amber">
-                    [{evt.eventType}]
-                  </span>
-                  <span className="text-[10px] text-space-dim font-mono">
-                    {evt.source}
-                  </span>
-                </div>
-                <h4 className="text-xs font-bold text-space-text mb-1">{evt.classification}</h4>
-                <div className="text-[11px] text-space-dim space-y-0.5 font-mono">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-space-cyan" />
-                    <span>Onset: {new Date(evt.onsetUtc).toLocaleString('en-US', { timeZone: 'UTC' })} UTC</span>
-                  </div>
-                  <div>Impact: {evt.protonFluxLevel}</div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-space-border/60 text-[11px] text-space-muted">
-                <span className="text-space-cyan font-semibold block mb-0.5">Shelter Action:</span>
-                <p className="text-space-dim text-[11px] leading-tight">{evt.shelterAdvisory}</p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-space-bg border border-space-border rounded-lg p-0.5">
+              <button
+                onClick={() => setDonkiMode('live')}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
+                  donkiMode === 'live'
+                    ? 'bg-space-panel text-space-cyan border border-space-cyan/30 font-semibold shadow'
+                    : 'text-space-dim hover:text-space-text'
+                }`}
+              >
+                Live DONKI API
+              </button>
+              <button
+                onClick={() => setDonkiMode('log')}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
+                  donkiMode === 'log'
+                    ? 'bg-space-panel text-space-cyan border border-space-cyan/30 font-semibold shadow'
+                    : 'text-space-dim hover:text-space-text'
+                }`}
+              >
+                Mission Log
+              </button>
             </div>
-          ))}
+            <span className="text-xs font-mono text-space-cyan px-2.5 py-0.5 rounded bg-space-cyan-muted border border-space-cyan/30">
+              DONKI API LINKED
+            </span>
+          </div>
         </div>
+
+        {donkiMode === 'live' ? (
+          <RadiationDashboard />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {rad.donkiEvents.map((evt) => (
+              <div key={evt.id} className="bg-space-bg/70 border border-space-border rounded-lg p-3.5 flex flex-col justify-between space-y-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-mono font-bold text-space-amber">
+                      [{evt.eventType}]
+                    </span>
+                    <span className="text-[10px] text-space-dim font-mono">
+                      {evt.source}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-space-text mb-1">{evt.classification}</h4>
+                  <div className="text-[11px] text-space-dim space-y-0.5 font-mono">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-space-cyan" />
+                      <span>Onset: {new Date(evt.onsetUtc).toLocaleString('en-US', { timeZone: 'UTC' })} UTC</span>
+                    </div>
+                    <div>Impact: {evt.protonFluxLevel}</div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-space-border/60 text-[11px] text-space-muted">
+                  <span className="text-space-cyan font-semibold block mb-0.5">Shelter Action:</span>
+                  <p className="text-space-dim text-[11px] leading-tight">{evt.shelterAdvisory}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Crew Career Dose vs NASA-STD-3001 Limits */}

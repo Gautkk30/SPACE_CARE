@@ -80,7 +80,9 @@ def get_osd946_data_dir() -> Path:
     cwd = Path.cwd()
     candidate_paths = [
         cwd / "data" / "raw" / "nasa" / "osd946",
+        cwd / "SPACECARE" / "data" / "raw" / "nasa" / "osd946",
         cwd.parent / "data" / "raw" / "nasa" / "osd946",
+        Path(__file__).resolve().parents[3] / "data" / "raw" / "nasa" / "osd946",
         Path(__file__).resolve().parents[4] / "data" / "raw" / "nasa" / "osd946",
     ]
 

@@ -575,7 +575,8 @@ export type TabId =
   | 'mental-health'
   | 'ai-analysis'
   | 'alerts'
-  | 'reports';
+  | 'reports'
+  | 'research';
 
 export interface NavigationTab {
   id: TabId;
