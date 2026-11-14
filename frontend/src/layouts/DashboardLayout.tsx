@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode, ComponentType } from 'react';
 import { TabId, AstronautProfile } from '../types/spacecare';
+import { ConnectionMode } from '../services/api';
 import {
   LayoutDashboard,
   Users,
@@ -35,6 +36,7 @@ interface DashboardLayoutProps {
   selectedAstronautId: string;
   onSelectAstronaut: (id: string) => void;
   activeAlertCount: number;
+  backendMode?: ConnectionMode;
 }
 
 export const DashboardLayout = ({
@@ -45,6 +47,7 @@ export const DashboardLayout = ({
   selectedAstronautId,
   onSelectAstronaut,
   activeAlertCount,
+  backendMode = 'SIMULATED_FALLBACK',
 }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUtc, setCurrentUtc] = useState<string>('');
@@ -111,6 +114,24 @@ export const DashboardLayout = ({
 
         {/* Center / Right Telemetry Indicator, UTC Clock & Controls */}
         <div className="flex items-center gap-2.5 lg:gap-4">
+          {/* Backend Connection Status Pill */}
+          <div
+            className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium border ${
+              backendMode === 'LIVE_BACKEND'
+                ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/40'
+                : 'bg-space-bg text-space-dim border-space-border'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                backendMode === 'LIVE_BACKEND' ? 'bg-space-emerald animate-ping' : 'bg-space-amber'
+              }`}
+            />
+            <span>
+              {backendMode === 'LIVE_BACKEND' ? 'BACKEND: CONNECTED' : 'BACKEND: STANDBY • SIMULATED'}
+            </span>
+          </div>
+
           {/* Simulated Telemetry Badge */}
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-space-cyan-muted text-space-cyan border border-space-cyan/30">
             <Database className="w-3.5 h-3.5" />
@@ -209,7 +230,7 @@ export const DashboardLayout = ({
           <div className="p-4 border-t border-space-border/60 text-[11px] text-space-dim space-y-1 bg-space-bg/40">
             <div className="flex items-center justify-between">
               <span className="text-space-muted font-medium">Framework</span>
-              <span className="font-mono text-space-cyan">Phase 2 Workstation</span>
+              <span className="font-mono text-space-cyan">Production Suite</span>
             </div>
             <div className="flex items-center justify-between">
               <span>NASA Challenge</span>

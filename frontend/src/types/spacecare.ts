@@ -6,6 +6,7 @@
 
 export type HealthStatus = 'NOMINAL' | 'CAUTION' | 'ALERT';
 export type AlertSeverity = 'INFO' | 'CAUTION' | 'CRITICAL';
+export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
 export type HealthCategory = 
   | 'CARDIOVASCULAR' 
   | 'RADIATION' 
@@ -92,10 +93,6 @@ export interface CardiovascularMetrics {
     citation: string;
   };
 }
-
-/* ==============================================================================
- * Phase 3 Batch 2: Musculoskeletal, Radiation, & Mental Health Interfaces
- * ============================================================================== */
 
 export interface MusculoskeletalLongitudinalPoint {
   week: number;
@@ -194,6 +191,107 @@ export interface MentalHealthMetrics {
 }
 
 /* ==============================================================================
+ * Phase 3 Batch 3: AI Anomaly Detection, Extended Alerts, & Health Reports
+ * ============================================================================== */
+
+export interface FeatureContribution {
+  featureName: string;
+  featureKey: string;
+  contributionPct: number; // 0-100
+  observedValue: string;
+  nominalRange: string;
+  deviationZScore: number;
+  direction: 'ELEVATED' | 'DEPRESSED' | 'IRREGULAR';
+}
+
+export interface AnomalyTimelinePoint {
+  day: number;
+  dateLabel: string;
+  anomalyScore: number; // 0.00 - 1.00
+  threshold: number; // 0.65
+  zScoreDeviation: number;
+}
+
+export interface AIAnalysisResult {
+  astronautId: string;
+  astronautName: string;
+  compositeAnomalyScore: number; // 0.00 - 1.00
+  anomalyThreshold: number; // 0.65
+  riskLevel: 'NOMINAL' | 'ELEVATED' | 'HIGH';
+  confidenceLevel: number; // e.g. 0.94
+  baselineDeviationZScore: number; // e.g. +2.4
+  modelType: string; // "Isolation Forest + Baseline Z-Score Ensemble • Prototype"
+  timeline14d: AnomalyTimelinePoint[];
+  featureAttributions: FeatureContribution[];
+  clinicalInterpretation: string;
+  nextAssessmentRecommendations: string[];
+  dataSource: 'SIMULATED ML OUTPUT';
+}
+
+export interface HealthAlert {
+  id: string;
+  astronautId: string;
+  astronautName: string;
+  category: HealthCategory;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  title: string;
+  whatIsChanging: string;
+  whyItMatters: string;
+  physiologicalExplanation: string;
+  countermeasure: string;
+  suggestedFurtherAssessment: string;
+  evidenceReference: string;
+  timestamp: string;
+  acknowledged: boolean;
+}
+
+export interface MissionHealthReport {
+  astronautId: string;
+  astronautName: string;
+  callsign: string;
+  role: string;
+  missionDay: number;
+  reportGeneratedUtc: string;
+  timeframe: '7_DAY_WEEKLY' | 'MISSION_TO_DATE';
+  executiveSummary: string;
+  vitalsSummary: {
+    avgHeartRate: number;
+    avgSpo2: number;
+    avgSystolicBP: number;
+    avgDiastolicBP: number;
+    avgHrvRmssd: number;
+  };
+  cardiovascularSummary: {
+    restingHrDrift: number;
+    meanArterialPressure: number;
+    orthostaticReadinessScore: number;
+    status: string;
+  };
+  musculoskeletalSummary: {
+    femoralNeckBmdLossPct: number;
+    lumbarSpineBmdLossPct: number;
+    lowerLimbMuscleLossPct: number;
+    aredAdherencePct: number;
+  };
+  radiationSummary: {
+    cumulativeMissionDoseMsv: number;
+    careerDosePct: number;
+    status: string;
+  };
+  behavioralSummary: {
+    avgSleepDurationHours: number;
+    sleepEfficiencyPct: number;
+    circadianScore: number;
+    stressIndex: number;
+    status: string;
+  };
+  activeAlertsCount: number;
+  nasaResearchContext: string;
+  surgeonSignOff: string;
+}
+
+/* ==============================================================================
  * Master Astronaut Profile
  * ============================================================================== */
 
@@ -220,20 +318,7 @@ export interface AstronautProfile {
   cardiovascular: CardiovascularMetrics;
   musculoskeletal: MusculoskeletalMetrics;
   mentalHealth: MentalHealthMetrics;
-}
-
-export interface HealthAlert {
-  id: string;
-  astronautId: string;
-  astronautName: string;
-  category: HealthCategory;
-  severity: AlertSeverity;
-  title: string;
-  physiologicalExplanation: string;
-  countermeasure: string;
-  evidenceReference: string; // e.g., "NASA HRP Cardiovascular Risk Standard / OSDR Study GL-0041"
-  timestamp: string;
-  acknowledged: boolean;
+  aiAnalysis: AIAnalysisResult;
 }
 
 export interface MissionSummary {
@@ -243,8 +328,8 @@ export interface MissionSummary {
   nominalCrewCount: number;
   cautionCrewCount: number;
   alertCrewCount: number;
-  spaceWeatherCondition: string; // e.g. "G1 Minor Storm / Normal Solar Flux"
-  radiationExposureRate: string; // e.g. "18.4 μGy/hr"
+  spaceWeatherCondition: string;
+  radiationExposureRate: string;
   telemetrySyncTime: string;
   dataSource: 'SIMULATED TELEMETRY';
 }
