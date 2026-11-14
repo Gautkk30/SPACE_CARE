@@ -22,6 +22,10 @@ import {
   AIAnalysisResult,
   FeatureContribution,
   AnomalyTimelinePoint,
+  SleepLogEntry,
+  MentalHealthMetrics,
+  SleepArchitectureDay,
+  BehavioralCheckIn,
 } from '../types/spacecare';
 import {
   MOCK_ASTRONAUTS,
@@ -40,7 +44,12 @@ interface TelemetryContextValue {
   missionSummary: MissionSummary;
   backendMode: ConnectionMode;
   telemetryHistory: Record<string, TelemetryReading[]>;
+  sleepLogsByAstronaut: Record<string, SleepLogEntry[]>;
   recordTelemetryReading: (reading: Omit<TelemetryReading, 'id'> | TelemetryReading) => Promise<TelemetryReading>;
+  logAstronautSleep: (
+    entry: Omit<SleepLogEntry, 'id'> | SleepLogEntry,
+    applyPhysiologicalEffect?: boolean
+  ) => Promise<void>;
   acknowledgeAlert: (alertId: string) => Promise<void>;
   resolveAlert: (alertId: string) => void;
 }
@@ -86,6 +95,14 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [telemetryHistory, setTelemetryHistory] = useState<Record<string, TelemetryReading[]>>(() =>
     initializeTelemetryFromMock(MOCK_ASTRONAUTS)
   );
+  const [sleepLogsByAstronaut, setSleepLogsByAstronaut] = useState<Record<string, SleepLogEntry[]>>({});
+  const [mentalHealthByAstronaut, setMentalHealthByAstronaut] = useState<Record<string, MentalHealthMetrics>>(() => {
+    const initial: Record<string, MentalHealthMetrics> = {};
+    MOCK_ASTRONAUTS.forEach((a) => {
+      initial[a.id] = a.mentalHealth;
+    });
+    return initial;
+  });
 
   // Poll backend health
   useEffect(() => {
@@ -224,11 +241,253 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     return savedReading;
   };
 
+  // Action: Log Astronaut Sleep & Dynamically Propagate Telemetry
+  const logAstronautSleep = async (
+    entryInput: Omit<SleepLogEntry, 'id'> | SleepLogEntry,
+    applyPhysiologicalEffect: boolean = true
+  ): Promise<void> => {
+    const targetAstronautId = entryInput.astronaut_id;
+    const targetAstro = crewProfiles.find((c) => c.id === targetAstronautId) || crewProfiles[0];
+    const currentMental = mentalHealthByAstronaut[targetAstronautId] || targetAstro.mentalHealth;
+    const hours = entryInput.hours_slept;
+
+    const baseHr = targetAstro.baseline_heart_rate ?? targetAstro.baseline?.restingHeartRate ?? 70;
+    const baseSys = targetAstro.baseline_systolic_bp ?? targetAstro.baseline?.restingSystolicBP ?? 120;
+    const baseDia = targetAstro.baseline_diastolic_bp ?? targetAstro.baseline?.restingDiastolicBP ?? 80;
+    const baseSpo2 = targetAstro.baseline_spo2 ?? targetAstro.baseline?.baselineSpO2 ?? 98.2;
+    const baseTemp = targetAstro.baseline_body_temperature ?? targetAstro.baseline?.baselineCoreTemp ?? 36.8;
+    const baseResp = targetAstro.baseline_respiration_rate ?? 14;
+
+    let hrDelta = 0;
+    let bpSysDelta = 0;
+    let bpDiaDelta = 0;
+    let respDelta = 0;
+    let cognitiveReadiness = 95;
+    let circadianAlignment = 92;
+    let stressLevel = 3;
+    let alertSeverity: 'CRITICAL' | 'CAUTION' | null = null;
+    let alertTitle = '';
+    let alertObservation = '';
+    let alertRecommendation = '';
+
+    if (hours < 6.0) {
+      // Low Sleep (< 6.0h): Elevated HR (+8 to +16 bpm), elevated systolic BP (+6 to +12 mmHg), lower cognitive readiness
+      const deficit = 6.0 - hours; // 0 to 4
+      hrDelta = Math.min(16, Math.max(8, Math.round(8 + (deficit / 4) * 8)));
+      bpSysDelta = Math.min(12, Math.max(6, Math.round(6 + (deficit / 4) * 6)));
+      bpDiaDelta = Math.round(bpSysDelta * 0.6);
+      respDelta = hours < 4.0 ? 3 : 2;
+
+      cognitiveReadiness = Math.max(25, Math.round(100 - (8.0 - hours) * 16));
+      circadianAlignment = Math.max(45, Math.round(88 - (8.0 - hours) * 9));
+      stressLevel = Math.min(9, Math.round(4 + (8.0 - hours) * 1.2));
+
+      alertSeverity = hours < 4.5 ? 'CRITICAL' : 'CAUTION';
+      alertTitle = hours < 4.5
+        ? `Acute Sleep Deprivation & Cognitive Risk (${hours}h)`
+        : `Sleep Debt & Autonomic Cardiovascular Strain (${hours}h)`;
+      alertObservation = `Only ${hours}h recorded (quality: ${entryInput.sleep_quality}, awakenings: ${entryInput.awakenings}). Autonomic tone shifted: resting HR elevated by +${hrDelta} bpm to ${baseHr + hrDelta} bpm; systolic BP rose to ${baseSys + bpSysDelta} mmHg. Cognitive readiness dropped to ${cognitiveReadiness}%.`;
+      alertRecommendation = `NASA HRP Fatigue Protocol: Reschedule non-critical tasks. Administer 30-min prophylactic nap before high-risk operations. Adjust crew cabin SSLA light to 480nm circadian entrainment mode. Restrict caffeine intake after 14:00 MET.`;
+    } else if (hours >= 6.0 && hours < 7.0) {
+      // Moderate Sleep (6.0–6.9h): Mild HR (+4 to +7 bpm) and BP (+3 to +5 mmHg) drift with fatigue advisory
+      hrDelta = 5;
+      bpSysDelta = 4;
+      bpDiaDelta = 2;
+      respDelta = 1;
+      cognitiveReadiness = 78;
+      circadianAlignment = 76;
+      stressLevel = 5;
+
+      alertSeverity = 'CAUTION';
+      alertTitle = `Mild Sleep Restriction & Autonomic Drift (${hours}h)`;
+      alertObservation = `${hours}h sleep logged (suboptimal vs 8.0h NASA standard). Modest sympathetic autonomic drift: HR +${hrDelta} bpm, BP +${bpSysDelta} mmHg. Cognitive readiness is ${cognitiveReadiness}%.`;
+      alertRecommendation = `Enforce 8.0h sleep window tonight; schedule 20-min crew downtime and monitor evening actigraphy.`;
+    } else if (hours >= 7.0 && hours <= 8.5) {
+      // Optimal Sleep (7.0–8.5h): Stabilizes HR/BP at baseline, boosts readiness
+      hrDelta = 0;
+      bpSysDelta = 0;
+      bpDiaDelta = 0;
+      respDelta = 0;
+      cognitiveReadiness = 96;
+      circadianAlignment = 94;
+      stressLevel = 2;
+      alertSeverity = null;
+    } else if (hours > 8.5 && hours <= 9.5) {
+      // Slightly extended sleep
+      hrDelta = -1;
+      bpSysDelta = -1;
+      bpDiaDelta = 0;
+      respDelta = 0;
+      cognitiveReadiness = 88;
+      circadianAlignment = 88;
+      stressLevel = 2;
+      alertSeverity = null;
+    } else {
+      // High / Oversleep (> 9.5h): HR near/slightly below baseline (-2 to +2 bpm), flags circadian inertia / phase shift CAUTION alert
+      hrDelta = -2;
+      bpSysDelta = -2;
+      bpDiaDelta = -1;
+      respDelta = -1;
+      cognitiveReadiness = 72;
+      circadianAlignment = 68;
+      stressLevel = 4;
+
+      alertSeverity = 'CAUTION';
+      alertTitle = `Circadian Phase Delay & Sleep Inertia (${hours}h)`;
+      alertObservation = `Extended sleep duration of ${hours}h recorded. Prolonged post-awakening sleep inertia detected. Cognitive readiness dampened to ${cognitiveReadiness}%.`;
+      alertRecommendation = `Initiate 30-minute blue-enriched LED exposure (SSLA 480nm, 1000 lux) in crew cabin; perform 15-minute mild ergometer aerobic activation.`;
+    }
+
+    // Sleep stages breakdown
+    let deepRatio = 0.20;
+    let remRatio = 0.22;
+    let efficiency = 88;
+
+    if (entryInput.sleep_quality === 'POOR' || hours < 6.0) {
+      deepRatio = 0.14;
+      remRatio = 0.16;
+      efficiency = Math.min(76, Math.max(55, Math.round(55 + hours * 3.5 - entryInput.awakenings * 4)));
+    } else if (entryInput.sleep_quality === 'FAIR' || (hours >= 6.0 && hours < 7.0)) {
+      deepRatio = 0.18;
+      remRatio = 0.20;
+      efficiency = Math.min(84, Math.max(72, Math.round(70 + hours * 2 - entryInput.awakenings * 3)));
+    } else if (entryInput.sleep_quality === 'OPTIMAL' || (hours >= 7.0 && hours <= 8.5)) {
+      deepRatio = 0.24;
+      remRatio = 0.24;
+      efficiency = Math.min(96, Math.max(88, Math.round(90 + (hours - 7.0) * 3 - entryInput.awakenings * 2)));
+    } else {
+      deepRatio = 0.18;
+      remRatio = 0.22;
+      efficiency = Math.min(85, Math.max(75, Math.round(82 - entryInput.awakenings * 2)));
+    }
+
+    const deepHours = Number((hours * deepRatio).toFixed(1));
+    const remHours = Number((hours * remRatio).toFixed(1));
+    const lightHours = Number(Math.max(0, hours - deepHours - remHours).toFixed(1));
+
+    const currentHistory = currentMental.sleepArchitecture7d || [];
+    const lastDayNum = currentHistory.length > 0
+      ? parseInt(currentHistory[currentHistory.length - 1].dayLabel.replace(/\D/g, ''), 10) || 84
+      : 84;
+    const newDayNum = lastDayNum + 1;
+
+    const newDay: SleepArchitectureDay = {
+      dayLabel: `Day ${newDayNum} (Logged)`,
+      date: entryInput.date,
+      deepSleepHours: deepHours,
+      remSleepHours: remHours,
+      lightSleepHours: lightHours,
+      totalSleepHours: hours,
+      sleepEfficiencyPct: efficiency,
+      targetHours: 8.0,
+      circadianAlignmentScore: circadianAlignment,
+      stressIndex: stressLevel,
+    };
+
+    // Rolling 7-day window
+    const updatedSleep7d = [...currentHistory.slice(1), newDay];
+    const newAvgHours = Number(
+      (updatedSleep7d.reduce((acc, d) => acc + d.totalSleepHours, 0) / updatedSleep7d.length).toFixed(1)
+    );
+    const newAvgEff = Math.round(
+      updatedSleep7d.reduce((acc, d) => acc + d.sleepEfficiencyPct, 0) / updatedSleep7d.length
+    );
+    const sleepDebt = Number(
+      Math.max(0, 8.0 * updatedSleep7d.length - updatedSleep7d.reduce((acc, d) => acc + d.totalSleepHours, 0)).toFixed(1)
+    );
+
+    const checkIn: BehavioralCheckIn = {
+      id: `CHK-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toISOString(),
+      moodRating: hours >= 7 && hours <= 8.5 ? 5 : hours < 6 ? 2 : 3,
+      perceivedStress: stressLevel,
+      sleepQuality: entryInput.sleep_quality === 'OPTIMAL' ? 5 : entryInput.sleep_quality === 'FAIR' ? 3 : 2,
+      cognitiveFatigue: hours < 6 || hours > 9.5,
+      notes: entryInput.notes || `Sleep log: ${hours} hrs (${entryInput.sleep_quality}, ${entryInput.awakenings} awakenings).`,
+    };
+
+    const updatedMentalHealth: MentalHealthMetrics = {
+      ...currentMental,
+      currentCircadianAlignment: circadianAlignment,
+      currentStressIndex: stressLevel,
+      currentMoodScore: checkIn.moodRating,
+      weeklyAvgSleepHours: newAvgHours,
+      weeklyAvgEfficiencyPct: newAvgEff,
+      sleepArchitecture7d: updatedSleep7d,
+      checkInHistory: [checkIn, ...(currentMental.checkInHistory || [])],
+      sleepDebtHours: sleepDebt,
+      cognitiveReadinessScore: cognitiveReadiness,
+    };
+
+    // 1. Update mental health state
+    setMentalHealthByAstronaut((prev) => ({
+      ...prev,
+      [targetAstronautId]: updatedMentalHealth,
+    }));
+
+    // 2. Append to sleepLogsByAstronaut
+    const savedLog: SleepLogEntry = {
+      id: 'id' in entryInput ? entryInput.id : `SLP-${Date.now()}`,
+      ...entryInput,
+      coupled_to_vitals: applyPhysiologicalEffect,
+    };
+    setSleepLogsByAstronaut((prev) => ({
+      ...prev,
+      [targetAstronautId]: [savedLog, ...(prev[targetAstronautId] || [])],
+    }));
+
+    // 3. Record coupled telemetry reading & alert when applyPhysiologicalEffect is enabled
+    if (applyPhysiologicalEffect) {
+      const coupledReading: Omit<TelemetryReading, 'id'> = {
+        astronaut_id: targetAstronautId,
+        timestamp: new Date().toISOString(),
+        heart_rate: baseHr + hrDelta,
+        systolic_bp: baseSys + bpSysDelta,
+        diastolic_bp: baseDia + bpDiaDelta,
+        spo2: baseSpo2,
+        body_temperature: baseTemp,
+        respiration_rate: baseResp + respDelta,
+        data_source: 'SYNTHETIC_SIMULATED',
+        is_simulated: true,
+        dataset_reference: 'SLEEP_CIRCADIAN_COUPLING',
+      };
+      await recordTelemetryReading(coupledReading);
+
+      // Emit alert if threshold breached
+      if (alertSeverity) {
+        const newAlert: HealthAlert = {
+          id: `ALT-SLEEP-${Date.now()}`,
+          astronautId: targetAstronautId,
+          astronautName: targetAstro.name,
+          category: 'SLEEP_PSYCH',
+          severity: alertSeverity,
+          status: 'ACTIVE',
+          title: alertTitle,
+          whatIsChanging: alertObservation,
+          whyItMatters: 'Sleep restriction/inertia impairs neurobehavioral performance and causes autonomic sympathetic elevation.',
+          physiologicalExplanation: alertObservation,
+          countermeasure: alertRecommendation,
+          suggestedFurtherAssessment: 'Administer Psychomotor Vigilance Task (PVT-B) test and evaluate circadian rhythm phase markers.',
+          evidenceReference: 'NASA HRP Behavioral Health & Performance (BHP) Standard §4.2',
+          timestamp: new Date().toISOString(),
+          acknowledged: false,
+          astronaut_id: targetAstronautId,
+          message: alertObservation,
+          confidence_score: 0.94,
+          recommendation: alertRecommendation,
+          is_acknowledged: false,
+        };
+        setAlerts((prev) => [newAlert, ...prev]);
+      }
+    }
+  };
+
   // Recompute enriched crew profiles with dynamic latest biometrics, deltas, and trend points
   const enrichedCrew = useMemo(() => {
     return crewProfiles.map((astro) => {
+      const mental = mentalHealthByAstronaut[astro.id] || astro.mentalHealth;
       const readings = telemetryHistory[astro.id] || [];
-      if (readings.length === 0) return astro;
+      if (readings.length === 0) return { ...astro, mentalHealth: mental };
 
       const latest = readings[readings.length - 1];
 
@@ -384,9 +643,10 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         cardiovascular: dynamicCardiovascular,
         preFlightDeltas: dynamicPreflightDeltas,
         aiAnalysis: dynamicAiAnalysis,
+        mentalHealth: mental,
       };
     });
-  }, [crewProfiles, telemetryHistory]);
+  }, [crewProfiles, telemetryHistory, mentalHealthByAstronaut]);
 
   const selectedAstronaut = useMemo(() => {
     return (
@@ -432,7 +692,9 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         missionSummary: dynamicMissionSummary,
         backendMode,
         telemetryHistory,
+        sleepLogsByAstronaut,
         recordTelemetryReading,
+        logAstronautSleep,
         acknowledgeAlert,
         resolveAlert,
       }}

@@ -205,6 +205,20 @@ export interface SleepArchitectureDay {
   stressIndex: number; // 1-10
 }
 
+export type SleepQualityType = 'POOR' | 'FAIR' | 'OPTIMAL' | 'EXTENDED';
+
+export interface SleepLogEntry {
+  id: string;
+  astronaut_id: string;
+  date: string;
+  hours_slept: number;
+  sleep_quality: SleepQualityType;
+  awakenings: number;
+  coupled_to_vitals: boolean;
+  notes: string;
+  data_source: 'SYNTHETIC_SIMULATED';
+}
+
 export interface BehavioralCheckIn {
   id: string;
   timestamp: string; // ISO
@@ -223,6 +237,8 @@ export interface MentalHealthMetrics {
   weeklyAvgEfficiencyPct: number;
   sleepArchitecture7d: SleepArchitectureDay[];
   checkInHistory: BehavioralCheckIn[];
+  sleepDebtHours?: number;
+  cognitiveReadinessScore?: number;
 }
 
 /* ==============================================================================
