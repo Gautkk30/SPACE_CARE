@@ -73,3 +73,7 @@ Thumbs.db
 # OS Generated
 ehthumbs.db
 Desktop.ini
+
+# NASA OSD-946 Raw Datasets
+data/raw/nasa/osd946/miRNA-array/
+data/raw/nasa/osd946/OSD-946_metadata_OSD-946-ISA.zip
