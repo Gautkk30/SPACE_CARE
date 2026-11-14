@@ -47,6 +47,7 @@ class TelemetryGenerator:
         self.astronaut_id = astronaut_id
         self.baselines = baselines or self._default_baselines()
         self.rng = np.random.default_rng(seed)
+        self._last_ts: Optional[datetime] = None
 
     def _default_baselines(self) -> Dict[str, float]:
         """Provides default baselines matching the demo astronaut profile."""
@@ -89,9 +90,18 @@ class TelemetryGenerator:
         Generates a single physiological reading for a given timestamp and simulation pattern.
         Timestamps are strictly timezone-aware UTC.
         """
-        ts = timestamp or datetime.now(timezone.utc)
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+        if timestamp is None:
+            now = datetime.now(timezone.utc)
+            if self._last_ts is not None and now <= self._last_ts:
+                ts = self._last_ts + timedelta(seconds=1)
+            else:
+                ts = now
+            self._last_ts = ts
+        else:
+            ts = timestamp
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            self._last_ts = ts
 
         # Normalize pattern to SimulatedPattern enum
         if isinstance(pattern, str) and not isinstance(pattern, SimulatedPattern):

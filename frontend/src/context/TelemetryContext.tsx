@@ -26,6 +26,8 @@ import {
   MentalHealthMetrics,
   SleepArchitectureDay,
   BehavioralCheckIn,
+  AssessmentSummaryResponse,
+  convertAlertResponseToHealthAlert,
 } from '../types/spacecare';
 import {
   MOCK_ASTRONAUTS,
@@ -45,6 +47,7 @@ interface TelemetryContextValue {
   backendMode: ConnectionMode;
   telemetryHistory: Record<string, TelemetryReading[]>;
   sleepLogsByAstronaut: Record<string, SleepLogEntry[]>;
+  latestAssessmentByAstronaut: Record<string, AssessmentSummaryResponse>;
   recordTelemetryReading: (reading: Omit<TelemetryReading, 'id'> | TelemetryReading) => Promise<TelemetryReading>;
   logAstronautSleep: (
     entry: Omit<SleepLogEntry, 'id'> | SleepLogEntry,
@@ -88,7 +91,7 @@ function initializeTelemetryFromMock(astronauts: AstronautProfile[]): Record<str
 }
 
 export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [crewProfiles] = useState<AstronautProfile[]>(MOCK_ASTRONAUTS);
+  const [crewProfiles, setCrewProfiles] = useState<AstronautProfile[]>(MOCK_ASTRONAUTS);
   const [selectedAstronautId, setSelectedAstronautId] = useState<string>(MOCK_ASTRONAUTS[0].id);
   const [alerts, setAlerts] = useState<HealthAlert[]>(MOCK_ALERTS);
   const [backendMode, setBackendMode] = useState<ConnectionMode>('OFFLINE_DEMO_FALLBACK');
@@ -96,6 +99,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     initializeTelemetryFromMock(MOCK_ASTRONAUTS)
   );
   const [sleepLogsByAstronaut, setSleepLogsByAstronaut] = useState<Record<string, SleepLogEntry[]>>({});
+  const [latestAssessmentByAstronaut, setLatestAssessmentByAstronaut] = useState<Record<string, AssessmentSummaryResponse>>({});
   const [mentalHealthByAstronaut, setMentalHealthByAstronaut] = useState<Record<string, MentalHealthMetrics>>(() => {
     const initial: Record<string, MentalHealthMetrics> = {};
     MOCK_ASTRONAUTS.forEach((a) => {
@@ -104,17 +108,66 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     return initial;
   });
 
-  // Poll backend health
+  // Poll backend health & synchronize state with Member 3's routers
   useEffect(() => {
-    const probe = () => {
-      spacecareApi.checkBackendHealth().then((res) => {
-        setBackendMode(res.state);
-      });
+    let isMounted = true;
+
+    const syncWithBackend = async () => {
+      try {
+        const probeRes = await spacecareApi.probeConnection();
+        if (!isMounted) return;
+        setBackendMode(probeRes.state);
+
+        if (probeRes.state === 'LIVE_API') {
+          // 1. Fetch live astronauts from GET /api/v1/astronauts
+          const astroRes = await spacecareApi.getAstronauts();
+          if (astroRes.data && Array.isArray(astroRes.data) && astroRes.data.length > 0) {
+            setCrewProfiles((prev) =>
+              prev.map((p) => {
+                const dbMatch = astroRes.data.find((a) => a.id === p.id);
+                if (dbMatch) {
+                  return {
+                    ...p,
+                    baseline_heart_rate: dbMatch.baseline_heart_rate,
+                    baseline_systolic_bp: dbMatch.baseline_systolic_bp,
+                    baseline_diastolic_bp: dbMatch.baseline_diastolic_bp,
+                    baseline_spo2: dbMatch.baseline_spo2,
+                    baseline_body_temperature: dbMatch.baseline_body_temperature,
+                    baseline_respiration_rate: dbMatch.baseline_respiration_rate,
+                  };
+                }
+                return p;
+              })
+            );
+          }
+
+          // 2. Fetch live alerts from SQLite
+          const alertRes = await spacecareApi.getAlerts();
+          if (alertRes.data && Array.isArray(alertRes.data) && alertRes.data.length > 0) {
+            setAlerts(alertRes.data);
+          }
+
+          // 3. Fetch recent telemetry for the active astronaut
+          const teleRes = await spacecareApi.getAstronautTelemetry(selectedAstronautId, 50);
+          if (teleRes.data && Array.isArray(teleRes.data) && teleRes.data.length > 0) {
+            setTelemetryHistory((prev) => ({
+              ...prev,
+              [selectedAstronautId]: teleRes.data as unknown as TelemetryReading[],
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn('Backend sync failed, maintaining offline state:', err);
+      }
     };
-    probe();
-    const interval = setInterval(probe, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    syncWithBackend();
+    const interval = setInterval(syncWithBackend, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedAstronautId]);
 
   // Action: Acknowledge Alert
   const acknowledgeAlert = async (alertId: string) => {
@@ -146,19 +199,54 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
       ...rawReading,
     };
 
+    const targetAstronautId = savedReading.astronaut_id;
+
     // If live API, dispatch to FastAPI/SQLite
     if (backendMode === 'LIVE_API') {
       try {
         const res = await spacecareApi.submitTelemetryReading(rawReading);
-        if (res.data) {
-          savedReading = res.data;
+        if (res.data && res.data.telemetry) {
+          savedReading = {
+            id: res.data.telemetry.id,
+            astronaut_id: res.data.telemetry.astronaut_id,
+            timestamp: res.data.telemetry.timestamp,
+            heart_rate: res.data.telemetry.heart_rate,
+            systolic_bp: res.data.telemetry.systolic_bp,
+            diastolic_bp: res.data.telemetry.diastolic_bp,
+            spo2: res.data.telemetry.spo2,
+            body_temperature: res.data.telemetry.body_temperature,
+            respiration_rate: res.data.telemetry.respiration_rate,
+            data_source: res.data.telemetry.data_source as any,
+            is_simulated: res.data.telemetry.is_simulated,
+            dataset_reference: res.data.telemetry.dataset_reference,
+          };
+
+          // Store live assessment summary
+          if (res.data.assessment_summary) {
+            setLatestAssessmentByAstronaut((prev) => ({
+              ...prev,
+              [targetAstronautId]: res.data.assessment_summary,
+            }));
+          }
+
+          // Fetch refreshed SQLite alerts
+          try {
+            const alertRes = await spacecareApi.getAstronautAlerts(targetAstronautId);
+            if (alertRes.data && Array.isArray(alertRes.data) && alertRes.data.length > 0) {
+              const liveAlerts = alertRes.data.map((a) => convertAlertResponseToHealthAlert(a, {}));
+              setAlerts((prev) => {
+                const otherAlerts = prev.filter((a) => a.astronautId !== targetAstronautId);
+                return [...liveAlerts, ...otherAlerts];
+              });
+            }
+          } catch (e) {
+            console.warn('Failed to refresh live alerts:', e);
+          }
         }
       } catch (err) {
         console.warn('Backend telemetry post failed, staging in memory:', err);
       }
     }
-
-    const targetAstronautId = savedReading.astronaut_id;
 
     // 1. Append reading to telemetryHistory immediately
     setTelemetryHistory((prev) => {
@@ -576,10 +664,10 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Dynamic AI Analysis Score
       const absHrDelta = Math.abs(hrDrift);
       const absSpo2Delta = Math.max(0, baseSpo2 - latest.spo2);
-      const dynamicAnomalyScore = Number(Math.min(0.99, Math.max(0.12, 0.15 + (absHrDelta / 60) * 0.45 + (absSpo2Delta / 10) * 0.40)).toFixed(2));
-      const dynamicRiskLevel: 'NOMINAL' | 'ELEVATED' | 'HIGH' = dynamicAnomalyScore >= 0.75 ? 'HIGH' : dynamicAnomalyScore >= 0.50 ? 'ELEVATED' : 'NOMINAL';
+      let dynamicAnomalyScore = Number(Math.min(0.99, Math.max(0.12, 0.15 + (absHrDelta / 60) * 0.45 + (absSpo2Delta / 10) * 0.40)).toFixed(2));
+      let dynamicRiskLevel: 'NOMINAL' | 'ELEVATED' | 'HIGH' = dynamicAnomalyScore >= 0.75 ? 'HIGH' : dynamicAnomalyScore >= 0.50 ? 'ELEVATED' : 'NOMINAL';
 
-      const dynamicFeatureAttributions: FeatureContribution[] = [
+      let dynamicFeatureAttributions: FeatureContribution[] = [
         {
           featureName: 'Heart Rate Drift',
           featureKey: 'hr_drift',
@@ -601,6 +689,42 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         ...(astro.aiAnalysis?.featureAttributions?.slice(2) || []),
       ];
 
+      // Check for Live ML & Multi-Hazard Assessment from Member 3's backend
+      const liveAssessment = latestAssessmentByAstronaut[astro.id];
+      if (liveAssessment) {
+        if (liveAssessment.ml_anomaly_detected) {
+          dynamicAnomalyScore = Number(Math.min(0.99, Math.max(0.68, 0.65 + Math.abs(liveAssessment.ml_anomaly_score) * 0.4)).toFixed(2));
+          dynamicRiskLevel = liveAssessment.overall_status === 'CRITICAL_RISK' ? 'HIGH' : 'ELEVATED';
+        } else {
+          dynamicAnomalyScore = Number(Math.max(0.12, Math.min(0.55, 0.20 + (liveAssessment.ml_anomaly_score + 0.5) * 0.3)).toFixed(2));
+          dynamicRiskLevel = liveAssessment.overall_status === 'ELEVATED_RISK' ? 'ELEVATED' : 'NOMINAL';
+        }
+
+        if (liveAssessment.heuristic_explanations && liveAssessment.heuristic_explanations.length > 0) {
+          dynamicFeatureAttributions = liveAssessment.heuristic_explanations.map((exp) => ({
+            featureName: exp.feature.replace(/_/g, ' ').toUpperCase(),
+            featureKey: exp.feature,
+            contributionPct: Math.min(100, Math.max(15, Math.round(exp.robust_z_score * 25))),
+            observedValue: String(exp.observed_value),
+            nominalRange: `Median ${exp.training_median}`,
+            deviationZScore: exp.robust_z_score,
+            direction: exp.direction.toUpperCase() === 'ELEVATED' ? 'ELEVATED' : 'DEPRESSED',
+          }));
+        }
+      }
+
+      const modelType = liveAssessment
+        ? 'FastAPI Isolation Forest + Multi-Hazard Rules (Live SQLite Engine)'
+        : 'Isolation Forest + Baseline Z-Score Ensemble • Prototype';
+
+      const clinicalInterpretation = liveAssessment
+        ? `[Live Multi-Hazard Engine] Primary Hazard: ${liveAssessment.primary_hazard}. Status: ${liveAssessment.overall_status} (Highest Severity: ${liveAssessment.highest_severity}). Isolation Forest Score: ${liveAssessment.ml_anomaly_score}. Evidence Status: ${liveAssessment.overall_evidence_status}. Assessed Domains: ${liveAssessment.assessed_domains.join(', ')}.`
+        : dynamicRiskLevel === 'HIGH'
+        ? `Acute physiological divergence detected in latest stream (HR ${latest.heart_rate} bpm, SpO2 ${latest.spo2}%). Significant Z-score elevation over baseline calibration.`
+        : dynamicRiskLevel === 'ELEVATED'
+        ? `Moderate physiological stress signature observed. Heart rate and gas exchange parameters show caution drift.`
+        : `All biometric features oscillate within the personal pre-flight nominal statistical boundary.`;
+
       const dynamicTimeline14d: AnomalyTimelinePoint[] = (astro.aiAnalysis?.timeline14d || []).map((pt, idx, arr) => {
         if (idx === arr.length - 1) {
           return {
@@ -618,7 +742,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
           astronautName: astro.name,
           anomalyThreshold: 0.65,
           confidenceLevel: 0.94,
-          modelType: 'Isolation Forest + Baseline Z-Score Ensemble • Prototype',
+          modelType,
           nextAssessmentRecommendations: ['Perform scheduled vitals confirmation.'],
           dataSource: 'SIMULATED ML OUTPUT',
         }),
@@ -627,11 +751,9 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         baselineDeviationZScore: Number((hrDrift / 10).toFixed(1)),
         featureAttributions: dynamicFeatureAttributions,
         timeline14d: dynamicTimeline14d,
-        clinicalInterpretation: dynamicRiskLevel === 'HIGH'
-          ? `Acute physiological divergence detected in latest stream (HR ${latest.heart_rate} bpm, SpO2 ${latest.spo2}%). Significant Z-score elevation over baseline calibration.`
-          : dynamicRiskLevel === 'ELEVATED'
-          ? `Moderate physiological stress signature observed. Heart rate and gas exchange parameters show caution drift.`
-          : `All biometric features oscillate within the personal pre-flight nominal statistical boundary.`,
+        clinicalInterpretation,
+        modelType,
+        dataSource: liveAssessment ? ('LIVE ML INGESTION' as any) : 'SIMULATED ML OUTPUT',
       };
 
       return {
@@ -646,7 +768,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         mentalHealth: mental,
       };
     });
-  }, [crewProfiles, telemetryHistory, mentalHealthByAstronaut]);
+  }, [crewProfiles, telemetryHistory, mentalHealthByAstronaut, latestAssessmentByAstronaut]);
 
   const selectedAstronaut = useMemo(() => {
     return (
@@ -693,6 +815,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         backendMode,
         telemetryHistory,
         sleepLogsByAstronaut,
+        latestAssessmentByAstronaut,
         recordTelemetryReading,
         logAstronautSleep,
         acknowledgeAlert,

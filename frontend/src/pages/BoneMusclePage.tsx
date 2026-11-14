@@ -19,10 +19,12 @@ import {
   Info,
   Flame,
   CheckCircle2,
+  FlaskConical,
 } from 'lucide-react';
 
 interface BoneMusclePageProps {
   selectedAstronaut: AstronautProfile;
+  onNavigateTab?: (tab: 'research') => void;
 }
 
 interface CustomTooltipProps {
@@ -57,7 +59,7 @@ const DarkBoneTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export const BoneMusclePage = ({ selectedAstronaut }: BoneMusclePageProps) => {
+export const BoneMusclePage = ({ selectedAstronaut, onNavigateTab }: BoneMusclePageProps) => {
   const [activeMetricTab, setActiveMetricTab] = useState<'bmd_vs_reference' | 'muscle_vs_compliance'>('bmd_vs_reference');
   const { musculoskeletal, name, callsign } = selectedAstronaut;
 
@@ -357,9 +359,20 @@ export const BoneMusclePage = ({ selectedAstronaut }: BoneMusclePageProps) => {
             <p>
               Excess bone calcium is released into the bloodstream and excreted renally, significantly heightening the risk of <strong className="text-space-amber">nephrolithiasis (kidney stones)</strong> in closed-loop spacecraft life-support conditions.
             </p>
-            <div className="pt-2 border-t border-space-border/60 text-[11px] font-mono text-space-cyan flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 shrink-0" />
-              <span>Citations: NASA HRP Bone Loss Evidence Book &bull; OSDR Ground Analog Bed-Rest Studies</span>
+            <div className="pt-2 border-t border-space-border/60 text-[11px] font-mono text-space-cyan flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>Citations: NASA HRP Bone Loss Evidence Book &bull; OSDR Ground Analog Bed-Rest Studies</span>
+              </div>
+              {onNavigateTab && (
+                <button
+                  onClick={() => onNavigateTab('research')}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-sans font-medium bg-space-cyan/15 hover:bg-space-cyan/25 text-space-cyan border border-space-cyan/30 transition cursor-pointer"
+                >
+                  <FlaskConical className="w-3 h-3" />
+                  <span>Inspect NASA OSD-946 QC &rarr;</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

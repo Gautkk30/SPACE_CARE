@@ -69,6 +69,11 @@ const TAB_DESCRIPTIONS: Record<TabId, { title: string; desc: string; backendHook
     desc: 'Exportable mission medical status reports, longitudinal trend graphs, and flight surgeon debriefings.',
     backendHook: '/api/v1/reports/{id}/summary',
   },
+  research: {
+    title: 'NASA OSDR Research (OSD-946)',
+    desc: 'Technical microarray quality-control analysis from NASA Open Science Data Repository (70-day bed rest analogue).',
+    backendHook: '/api/v1/research/osd946/overview',
+  },
 };
 
 export const PhaseNoticePlaceholder: React.FC<PhaseNoticePlaceholderProps> = ({

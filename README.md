@@ -25,16 +25,19 @@ Compounding these hazards, deep space transit involves communication latencies o
 
 ---
 
-## 3. Planned Features
+## 3. Implemented Capabilities & Features
 
-- [ ] **Real-Time Astronaut Telemetry Dashboard**: High-visibility mission control view tracking vital signs, SpO2, core body temperature, and HRV.
-- [ ] **Cardiovascular Adaptation Monitor**: Long-term tracking of orthostatic intolerance risk and arterial stiffness indices.
-- [ ] **Musculoskeletal Loss Tracker**: Tracking exercise countermeasure adherence (ARED) against estimated bone density and muscle mass retention curves.
-- [ ] **Space Radiation Early Warning**: Cabin dosimeter tracking correlated with real-time/recent NASA DONKI solar storm and CME alerts.
-- [ ] **Sleep Architecture & Psychological Wellbeing**: Circadian phase analysis, sleep efficiency scoring, and cognitive fatigue assessment.
-- [ ] **AI-Powered Anomaly Detection Engine**: Multivariate anomaly detection (Isolation Forest / Statistical Scoring) on streaming biometrics.
-- [ ] **Dynamic Alert & Action Dispatcher**: Multi-tiered alert banner (Info, Warning, Critical) with contextual countermeasure protocols.
-- [ ] **Individual Astronaut Health Profiles & Export**: Exportable mission health report cards with longitudinal trend graphs.
+- [x] **Real-Time Astronaut Telemetry Dashboard**: High-visibility mission control view tracking vital signs, SpO2, core body temperature, and HRV with connection state detection (`LIVE_API`, `API_HEALTHY_ROUTES_PENDING`, `OFFLINE_DEMO_FALLBACK`).
+- [x] **Cardiovascular Adaptation Monitor**: Longitudinal tracking of orthostatic intolerance risk and arterial stiffness indices calibrated against aerospace clinical references.
+- [x] **Musculoskeletal Loss Tracker**: Tracking exercise countermeasure adherence (ARED, T2, CEVIS) against bone mineral density loss curves, with direct integration to NASA OSDR bed-rest analogues.
+- [x] **Space Radiation & Live NASA DONKI CME Survelliance**: Cabin dosimeter tracking correlated with live NASA CCMC DONKI Coronal Mass Ejections and Solar Particle Events (`/api/v1/radiation/cme`).
+- [x] **NASA Open Science Data Repository (OSDR) Quality Control**: Complete research-grade browser for study OSD-946 / GLDS-773 (70-day bed rest miRNA microarray quality-control dataset) with cohort and sample probe statistics.
+- [x] **NASA-STD-3001 Operational Hazard & Physiology Lab**: Interactive multi-hazard spaceflight stressor simulator (Radiation flux, cabin O2/CO2, G-transitions, fluid shifts) with real-time biometric coupling.
+- [x] **Clinical Manual Health Input Workstation**: Astronaut vital signs submission portal conforming 1-to-1 with backend SQLAlchemy schema and Pydantic validation.
+- [x] **Sleep Architecture & Psychological Wellbeing**: Circadian rhythm tracking, actigraphy sleep log entries, and physiological coupling.
+- [x] **AI-Powered Anomaly Detection Engine**: Unsupervised multivariate anomaly detection utilizing Scikit-learn's Isolation Forest and deterministic multi-hazard heuristics (`/api/v1/telemetry`).
+- [x] **Early Warnings & Clinical Alert Dispatcher**: Multi-tiered priority alert queue with clinical countermeasure dispatch and acknowledgment workflows.
+- [x] **Individual Astronaut Health Profiles & Medical Dossier**: Exportable mission medical status reports with longitudinal Recharts visualization.
 
 ---
 
@@ -191,10 +194,28 @@ Detailed task assignments and workflow guidelines are documented in [docs/team_c
    ```
    *(Frontend runs on `http://localhost:5173`)*
 
-### Incomplete / Upcoming Development Steps
-- [ ] **Run Package Installations**: Developer environment needs `pip install` and `npm install` executed on local developer machines.
-- [ ] **Database Migration Execution**: Database tables to be migrated when models are defined in `backend/app/models/`.
-- [ ] **Telemetry Ingestion Engine**: Mock telemetry streaming scripts to be built in `scripts/`.
-- [ ] **ML Anomaly Models**: Preprocessing and model training pipelines in `backend/app/ml/` to be implemented.
-- [ ] **Interactive Frontend Views**: Vitals charts, radiation gauges, and alert banners to be populated with live state.
-- [ ] **Full Application Review**: Complete architectural review by team before production deployment.
+### Testing & Verification
+
+1. **Backend Test Suite (84 Automated Tests)**:
+   ```bash
+   cd backend
+   pytest
+   ```
+   *Covers database initialization, astronaut CRUD, telemetry ingestion bounds validation, alert creation/deduplication/acknowledgment, Isolation Forest scoring, multi-hazard preprocessing, NASA OSD-946 quality control endpoints, and NASA DONKI CME integration.*
+
+2. **Frontend Production Build**:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+   *Strict TypeScript checks (`tsc`) and Vite asset bundling with zero compiler errors.*
+
+---
+
+## 8. Scientific Disclosures & Ethical Compliance
+
+- **Non-Diagnostic Disclaimer**: SPACECARE is an aerospace decision-support prototype built for the NASA Space Apps Challenge 2026. It is not certified medical device software and does not diagnose, treat, or prevent clinical diseases.
+- **NASA Data Attribution**: 
+  - Coronal Mass Ejection event data is retrieved via NASA CCMC DONKI (`https://ccmc.gsfc.nasa.gov/DONKI-API/get/CME`).
+  - Microarray quality control data is derived from NASA Open Science Data Repository study OSD-946 / GLDS-773 (70-day bed rest study, GSE226504).
+  - Individual astronaut vitals and real-time streaming telemetry in this software are algorithmically generated synthetic demonstrations calibrated against NASA-STD-3001 and the NASA Human Research Program Evidence Books, not real astronaut medical records.

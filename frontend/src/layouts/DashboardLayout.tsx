@@ -21,6 +21,7 @@ import {
   Clock,
   Database,
   Bell,
+  FlaskConical,
 } from 'lucide-react';
 
 interface NavItem {
@@ -79,6 +80,7 @@ export const DashboardLayout = ({
     { id: 'ai-analysis', label: 'AI Analysis', icon: Cpu },
     { id: 'alerts', label: 'Alerts', icon: ShieldAlert, badge: activeAlertCount },
     { id: 'reports', label: 'Health Reports', icon: FileText },
+    { id: 'research', label: 'NASA OSDR Research', icon: FlaskConical },
   ];
 
   return (

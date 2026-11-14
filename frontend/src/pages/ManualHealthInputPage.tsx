@@ -3,8 +3,10 @@ import {
   AstronautProfile,
   TelemetryReading,
   DataSourceType,
+  AssessmentSummaryResponse,
 } from '../types/spacecare';
 import { spacecareApi, ConnectionMode } from '../services/api';
+import { useTelemetry } from '../context/TelemetryContext';
 import {
   ClipboardEdit,
   User,
@@ -83,12 +85,15 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
     respirationRate: String(baseline.respirationRate),
   });
 
+  const { latestAssessmentByAstronaut } = useTelemetry();
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionFeedback, setBackendFeedback] = useState<{
     success: boolean;
     message: string;
     isPending?: boolean;
     reading?: TelemetryReading;
+    assessment?: AssessmentSummaryResponse;
   } | null>(null);
 
   // Local log of submissions in this session
@@ -222,10 +227,15 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
     };
 
     try {
+      let liveAssessment: AssessmentSummaryResponse | undefined = undefined;
+
       if (onReadingSubmitted) {
         await onReadingSubmitted(readingPayload as TelemetryReading);
       } else {
-        await spacecareApi.submitTelemetryReading(readingPayload);
+        const res = await spacecareApi.submitTelemetryReading(readingPayload);
+        if (res.data?.assessment_summary) {
+          liveAssessment = res.data.assessment_summary;
+        }
       }
 
       const fullReading: TelemetryReading = {
@@ -234,12 +244,15 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
       };
       setSubmittedReadings((prev) => [fullReading, ...prev]);
 
+      const assessmentToDisplay = liveAssessment || latestAssessmentByAstronaut[currentAstronaut.id];
+
       if (backendMode === 'LIVE_API') {
         setBackendFeedback({
           success: true,
           message: `Saved to SQLite Database: Telemetry reading for ${currentAstronaut.name} (${currentAstronaut.id}) recorded at ${new Date(timestamp).toLocaleTimeString()} UTC.`,
           isPending: false,
           reading: fullReading,
+          assessment: assessmentToDisplay,
         });
       } else {
         setBackendFeedback({
@@ -580,23 +593,53 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
           {/* Feedback Banner */}
           {submissionFeedback && (
             <div
-              className={`p-4 rounded-xl text-xs font-mono border flex items-start gap-3 shadow-lg ${
+              className={`p-4 rounded-xl text-xs font-mono border flex flex-col gap-2.5 shadow-lg ${
                 submissionFeedback.isPending
                   ? 'bg-space-amber-muted/30 border-space-amber/40 text-space-amber'
                   : 'bg-space-emerald-muted/30 border-space-emerald/40 text-space-emerald'
               }`}
             >
-              {submissionFeedback.isPending ? (
-                <CloudOff className="w-5 h-5 shrink-0 mt-0.5 text-space-amber" />
-              ) : (
-                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-space-emerald" />
-              )}
-              <div className="space-y-1">
-                <p className="font-bold text-sm">{submissionFeedback.message}</p>
-                <p className="text-[11px] text-space-dim">
-                  Status: {submissionFeedback.isPending ? 'Session Memory Synced (Live API Pending)' : 'Database Synchronized'} &bull; Target: {currentAstronaut.name}
-                </p>
+              <div className="flex items-start gap-3">
+                {submissionFeedback.isPending ? (
+                  <CloudOff className="w-5 h-5 shrink-0 mt-0.5 text-space-amber" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-space-emerald" />
+                )}
+                <div className="space-y-1">
+                  <p className="font-bold text-sm">{submissionFeedback.message}</p>
+                  <p className="text-[11px] text-space-dim">
+                    Status: {submissionFeedback.isPending ? 'Session Staged (Backend Offline)' : 'Committed to SQLite Database'} &bull; Target: {currentAstronaut.name}
+                  </p>
+                </div>
               </div>
+
+              {/* Live ML & Hazard Evaluation Summary from Backend */}
+              {backendMode === 'LIVE_API' && (
+                <div className="mt-1 pt-2.5 border-t border-space-border/60 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className="bg-space-panel/80 p-2 rounded border border-space-border/60">
+                    <span className="text-[10px] text-space-dim block uppercase">ML Ingestion</span>
+                    <span className="font-bold text-space-cyan">ISOLATION FOREST</span>
+                  </div>
+                  <div className="bg-space-panel/80 p-2 rounded border border-space-border/60">
+                    <span className="text-[10px] text-space-dim block uppercase">Hazard Domain</span>
+                    <span className="font-bold text-space-text">
+                      {submissionFeedback.assessment?.primary_hazard || 'PHYSIOLOGICAL'}
+                    </span>
+                  </div>
+                  <div className="bg-space-panel/80 p-2 rounded border border-space-border/60">
+                    <span className="text-[10px] text-space-dim block uppercase">Multi-Hazard Status</span>
+                    <span className={`font-bold ${submissionFeedback.assessment?.overall_status === 'CRITICAL_RISK' ? 'text-space-red' : submissionFeedback.assessment?.overall_status === 'ELEVATED_RISK' ? 'text-space-amber' : 'text-space-emerald'}`}>
+                      {submissionFeedback.assessment?.overall_status || 'NOMINAL'}
+                    </span>
+                  </div>
+                  <div className="bg-space-panel/80 p-2 rounded border border-space-border/60">
+                    <span className="text-[10px] text-space-dim block uppercase">SQLite Alerts</span>
+                    <span className="font-bold text-space-text">
+                      +{submissionFeedback.assessment?.alerts_created_count ?? 0} Created
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
