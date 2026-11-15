@@ -1,6 +1,6 @@
 import NavBar from '../components/NavBar';
-import { BarChart2, ShieldCheck, Mic, User2, Moon, Brain, Wind, HeartPulse, Cpu, AlertCircle } from 'lucide-react';
-import OverviewDashboard from './OverviewDashboard';
+import { BarChart2, ShieldCheck, Moon, Brain, Wind, HeartPulse, Cpu, AlertCircle } from 'lucide-react';
+import { OverviewDashboard } from './OverviewDashboard';
 
 export default function LandingPage() {
   const navigateDashboard = () => {
