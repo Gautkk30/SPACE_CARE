@@ -856,6 +856,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const selectedAstronaut = useMemo(() => {
     return (
       enrichedCrew.find((c) => c.id === selectedAstronautId) ||
+      enrichedCrew.find((c) => c.id === 'astro_morgan') ||
       enrichedCrew.find((c) => c.id === 'astro_03') ||
       enrichedCrew[0]
     );

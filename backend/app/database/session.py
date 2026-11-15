@@ -1,13 +1,13 @@
-"""
-Database session and connection management for SPACECARE.
+"""Database session and connection management for SPACECARE.
 SQLAlchemy 2.x implementation with SQLite support.
 """
 
-from datetime import datetime, timezone
-from typing import Generator
+from typing import Generator, Dict, Any
+
 from sqlalchemy import create_engine, select, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+
 from app.core.config import settings
 
 # SQLite configuration
@@ -16,7 +16,6 @@ engine = create_engine(
     connect_args={"check_same_thread": False, "timeout": 30},
     echo=False
 )
-
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -30,17 +29,14 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         pass
     cursor.close()
 
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 
 class Base(DeclarativeBase):
     """SQLAlchemy 2.x Base declarative class."""
     pass
 
-
-# Demo Astronaut profile (algorithmically simulated testing profile, NOT real NASA astronaut data)
-DEMO_ASTRONAUT = {
+# Primary Demo Astronaut profile (preserved from initial release, NOT real NASA astronaut data)
+DEMO_ASTRONAUT: Dict[str, Any] = {
     "id": "astro_03",
     "name": "Major Marcus Chen",
     "role": "Flight Engineer",
@@ -56,30 +52,20 @@ DEMO_ASTRONAUT = {
     "is_demo": True,
 }
 
-
 def get_db() -> Generator[Session, None, None]:
-    """
-    FastAPI dependency yielding an independent database session per request
-    with guaranteed teardown.
-    """
+    """FastAPI dependency yielding an independent database session per request with guaranteed teardown."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-
 def seed_demo_astronaut(db_session: Session) -> bool:
-    """
-    Idempotently seeds the demo astronaut profile.
-    Avoids duplicate records if the astronaut is already present.
-    Returns True if newly seeded, False if already present.
-    """
+    """Idempotently seeds the primary demo astronaut profile (astro_03: Major Marcus Chen)."""
     from app.models.astronaut import Astronaut
 
     stmt = select(Astronaut).where(Astronaut.id == DEMO_ASTRONAUT["id"])
     existing = db_session.execute(stmt).scalar_one_or_none()
-
     if existing is None:
         demo_astronaut = Astronaut(**DEMO_ASTRONAUT)
         db_session.add(demo_astronaut)
@@ -87,15 +73,10 @@ def seed_demo_astronaut(db_session: Session) -> bool:
         return True
     return False
 
-
-def init_db(target_engine=None) -> None:
-    """
-    Initializes database tables and seeds demo astronaut idempotently.
-    Accepts an optional target_engine (useful for isolated unit tests).
-    """
+def init_db(target_engine=None, seed_all: Any = None) -> None:
+    """Initializes database tables and seeds demo astronaut idempotently."""
     active_engine = target_engine or engine
-
-    # Ensure all models are registered with Base.metadata
+    # Ensure models are imported so that Base.metadata knows about them
     from app.models.astronaut import Astronaut  # noqa: F401
     from app.models.telemetry import Telemetry  # noqa: F401
     from app.models.alert import Alert  # noqa: F401
