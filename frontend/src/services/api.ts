@@ -473,10 +473,6 @@ class SpacecareApiService {
       };
     }
 
-<<<<<<< HEAD
-    const crewIds = ['astro_morgan', 'astro_reynolds', 'astro_carter', 'astro_bennett', 'astro_03'];
-=======
->>>>>>> eed098172fca490e8d5cc1e252f298bcbfc0e590
     try {
       const astroRes = await this.getAstronauts();
       const activeCrew = (astroRes.data && Array.isArray(astroRes.data) && astroRes.data.length > 0)
