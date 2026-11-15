@@ -1,5 +1,5 @@
 import NavBar from '../components/NavBar';
-import { ArrowRight, BarChart2, ShieldCheck, Mic } from 'lucide-react';
+import { ArrowRight, BarChart2, ShieldCheck, Mic, User2 } from 'lucide-react';
 
 export default function LandingPage() {
   const navigateDashboard = () => {
@@ -224,7 +224,54 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* About / Meet Our Team Section */}
+      <section id="about" className="py-20 bg-space-bg/90">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">Meet CEACS</h2>
+          <p className="text-lg text-space-muted mb-8 max-w-3xl mx-auto">
+            Meet CEACS — the team behind SPACECARE. We are a group of passionate innovators working to explore how NASA data, artificial intelligence, and technology can contribute to astronaut health monitoring and safer human space exploration.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Team Member 1 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Beegum S. Rahmath</h3>
+              </div>
+            </div>
+            {/* Team Member 2 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Abhirami Anil</h3>
+              </div>
+            </div>
+            {/* Team Member 3 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Gautham K. K.</h3>
+              </div>
+            </div>
+            {/* Team Member 4 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Aadil Regi Hussain</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="cta" className="relative h-96 flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('/images/closing.jpg')" }}>
         <div className="absolute inset-0 bg-space-bg/80 backdrop-blur-md" />
         <div className="relative z-10 text-center max-w-xl px-4">
