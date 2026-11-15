@@ -1,5 +1,5 @@
 import NavBar from '../components/NavBar';
-import { ArrowRight, BarChart2, ShieldCheck, Mic, User2 } from 'lucide-react';
+import { ArrowRight, BarChart2, ShieldCheck, Mic, User2, Cloud } from 'lucide-react';
 
 export default function LandingPage() {
   const navigateDashboard = () => {
@@ -21,6 +21,129 @@ export default function LandingPage() {
       <NavBar />
 
       {/* Hero Section */}
+      <section
+        id="home"
+        className="relative h-screen flex items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/hero.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-space-bg/70 backdrop-blur-sm" />
+        <div className="relative z-10 text-center max-w-2xl px-4">
+          <div className="inline-block bg-space-cyan/20 px-3 py-1 rounded text-xs uppercase tracking-wider mb-4">
+            ASTRONAUT HEALTH INTELLIGENCE SYSTEM
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-extrabold mb-6 leading-tight">
+            BEYOND EARTH.<br />
+            BEYOND LIMITS.<br />
+            BEYOND RISK.
+          </h1>
+          <p className="mb-8 text-lg text-space-muted max-w-prose mx-auto">
+            An intelligent health‑monitoring platform designed to support astronaut wellbeing through NASA research, space‑weather data and AI‑powered anomaly awareness.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mx-auto">
+            <button
+              onClick={() => scrollTo('features')}
+              className="px-6 py-2 bg-space-cyan text-space-bg font-medium rounded hover:bg-space-cyan/80 transition"
+            >
+              EXPLORE SPACECARE
+            </button>
+            <button
+              onClick={navigateDashboard}
+              className="px-6 py-2 bg-space-teal text-space-bg font-medium rounded hover:bg-space-teal/80 transition"
+            >
+              VIEW MISSION DASHBOARD
+            </button>
+          </div>
+          {/* Capability indicators */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center gap-2 justify-center">
+              <BarChart2 className="w-5 h-5 text-space-cyan" /> NASA DATA INTEGRATION
+            </div>
+            <div className="flex items-center gap-2 justify-center">
+              <ShieldCheck className="w-5 h-5 text-space-cyan" /> HEALTH MONITORING
+            </div>
+            <div className="flex items-center gap-2 justify-center">
+              <Mic className="w-5 h-5 text-space-cyan" /> ML ANOMALY DETECTION
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Challenge Section */}
+      <section id="challenge" className="py-20 bg-space-bg/60">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">THE CHALLENGE</h2>
+          <p className="text-lg text-space-muted mb-8">
+            Space is extraordinary. But it is demanding on the human body.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Card 1 */}
+            <div className="nasa-card p-4 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold mb-2">Cardiovascular Changes</h3>
+              <p className="text-sm text-space-muted">Microgravity can affect heart function and circulation.</p>
+            </div>
+            {/* Card 2 */}
+            <div className="nasa-card p-4 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold mb-2">Bone &amp; Muscle Loss</h3>
+              <p className="text-sm text-space-muted">Reduced gravitational loading contributes to bone and muscle deterioration.</p>
+            </div>
+            {/* Card 3 */}
+            <div className="nasa-card p-4 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold mb-2">Space Radiation</h3>
+              <p className="text-sm text-space-muted">Radiation exposure and solar activity create additional mission‑health concerns.</p>
+            </div>
+            {/* Card 4 */}
+            <div className="nasa-card p-4 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold mb-2">Mental Wellbeing</h3>
+              <p className="text-sm text-space-muted">Isolation, confinement and disrupted sleep can affect psychological wellbeing.</p>
+            </div>
+            {/* Card 5 */}
+            <div className="nasa-card p-4 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold mb-2">Environmental Risks</h3>
+              <p className="text-sm text-space-muted">Changes in spacecraft environmental conditions require monitoring.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-space-bg/90">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-8">ONE MISSION. ONE INTELLIGENT PLATFORM.</h2>
+          <div className="flex flex-col items-center space-y-6">
+            {/* First row – three cards */}
+            <div className="flex flex-wrap justify-center gap-6">
+              {/* Feature 1 */}
+              <div className="nasa-card p-6 hover:shadow-lg transition cursor-pointer" onClick={() => navigateDashboard()}>
+                <h3 className="text-xl font-semibold mb-2">Astronaut Vitals</h3>
+                <p className="text-sm text-space-muted">Monitor and visualize heart rate, blood pressure, SpO₂, temperature and other telemetry.</p>
+              </div>
+              {/* Feature 2 */}
+              <div className="nasa-card p-6 hover:shadow-lg transition cursor-pointer" onClick={() => navigateDashboard()}>
+                <h3 className="text-xl font-semibold mb-2">ISS Environment</h3>
+                <p className="text-sm text-space-muted">Explore environmental readings and system conditions.</p>
+              </div>
+              {/* Feature 3 */}
+              <div className="nasa-card p-6 hover:shadow-lg transition cursor-pointer" onClick={() => navigateDashboard()}>
+                <h3 className="text-xl font-semibold mb-2">NASA Research</h3>
+                <p className="text-sm text-space-muted">Access spaceflight‑related biological research through NASA OSDR.</p>
+              </div>
+            </div>
+            {/* Second row – two cards centered */}
+            <div className="flex flex-wrap justify-center gap-6">
+              {/* Feature 4 */}
+              <div className="nasa-card p-6 hover:shadow-lg transition cursor-pointer" onClick={() => navigateDashboard()}>
+                <h3 className="text-xl font-semibold mb-2">Space Weather</h3>
+                <p className="text-sm text-space-muted">Explore solar activity and CME events using NASA CCMC DONKI.</p>
+              </div>
+              {/* Feature 5 */}
+              <div className="nasa-card p-6 hover:shadow-lg transition cursor-pointer" onClick={() => navigateDashboard()}>
+                <h3 className="text-xl font-semibold mb-2">ML Anomaly Detection</h3>
+                <p className="text-sm text-space-muted">Identify unusual patterns in astronaut telemetry.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <section
         id="home"
         className="relative h-screen flex items-center justify-center bg-cover bg-center"
