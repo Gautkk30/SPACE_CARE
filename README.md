@@ -43,6 +43,17 @@ Compounding these hazards, deep space transit involves communication latencies o
 
 ## Application Screenshots & Feature Walkthrough
 
+### Live End-to-End Demo Walkthrough (< 30s)
+
+🎥 **Video Demonstration**: [Watch / Download SPACECARE Live Demo Walkthrough (1440x900, WebM)](docs/demo/SPACECARE_live_demo.webm)
+
+A rapid, full-coverage operational walkthrough of the running SPACECARE system in under 30 seconds:
+- **0:00 – 0:05:** Animated NASA Mission Briefing overlay, Earth–Mars latency comparison, and HUD console launch.
+- **0:05 – 0:21:** Live `LIVE_API` Mission Overview, all 6 clinical telemetry domains (Crew, Vitals, Cardiovascular, Bone/Muscle BMD, NASA DONKI Radiation, Circadian Sleep), Isolation Forest AI diagnostics, and Multi-Hazard Stress Simulator.
+- **0:21 – 0:28:** Live SQLite biometric entry (`Manual Health Input`), Alert Triage, Flight Surgeon Reports, and NASA OSDR-946 Research Analog QC.
+
+---
+
 Explore the comprehensive visual command suite and aerospace clinical interfaces implemented in SPACECARE:
 
 ### 1. Mission Briefing Overlay — Orbital Hero & Telemetry Intro
