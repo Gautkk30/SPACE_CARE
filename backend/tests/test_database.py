@@ -79,12 +79,12 @@ def test_demo_astronaut_duplicate_prevention(test_engine, db_session):
     # First initialization
     init_db(target_engine=test_engine)
     count_first = db_session.scalar(select(func.count(Astronaut.id)))
-    assert count_first == 1
+    assert count_first == 4
 
     # Second initialization attempt
     init_db(target_engine=test_engine)
     count_second = db_session.scalar(select(func.count(Astronaut.id)))
-    assert count_second == 1
+    assert count_second == 4
 
     # Manual call to seed_demo_astronaut should return False (already exists)
     seeded_again = seed_demo_astronaut(db_session)
