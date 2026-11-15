@@ -3,6 +3,9 @@ import { Users, AlertTriangle, Radio, Sun, Clock, Database } from 'lucide-react'
 import { MissionSummary } from '../../types/spacecare';
 
 interface MissionSummaryStripProps {
+  summary?: MissionSummary | null;
+  activeAlertCount: number;
+}
   summary: MissionSummary;
   activeAlertCount: number;
 }
@@ -11,6 +14,18 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
   summary,
   activeAlertCount,
 }) => {
+  // Defensive handling for potentially null or undefined summary data
+  if (!summary) {
+    // Render a minimal placeholder or loading state
+    return (
+      <div className="bg-space-panel border border-space-border rounded-xl p-4 lg:p-5 shadow-lg">
+        <div className="text-xs uppercase tracking-wider text-space-dim font-medium">
+          No Mission Data Available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-space-panel border border-space-border rounded-xl p-4 lg:p-5 shadow-lg">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
