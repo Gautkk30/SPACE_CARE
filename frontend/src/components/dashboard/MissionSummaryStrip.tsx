@@ -6,9 +6,7 @@ interface MissionSummaryStripProps {
   summary?: MissionSummary | null;
   activeAlertCount: number;
 }
-  summary: MissionSummary;
-  activeAlertCount: number;
-}
+
 
 export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
   summary,
