@@ -12,6 +12,12 @@ interface OverviewDashboardProps {
   selectedAstronaut: AstronautProfile;
   onSelectAstronaut: (id: string) => void;
   alerts: HealthAlert[];
+  missionSummary?: MissionSummary | null;
+}
+  crew: AstronautProfile[];
+  selectedAstronaut: AstronautProfile;
+  onSelectAstronaut: (id: string) => void;
+  alerts: HealthAlert[];
   missionSummary: MissionSummary;
 }
 
