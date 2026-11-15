@@ -21,6 +21,11 @@ function SpacecareAppContent() {
   const params = new URLSearchParams(window.location.search);
   const initialTab = (params.get('tab') as TabId) || 'overview';
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+
+  // Determine initial tab from URL query param (e.g., ?view=dashboard&tab=vitals)
+  const params = new URLSearchParams(window.location.search);
+  const initialTab = (params.get('tab') as TabId) || 'overview';
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   const {
