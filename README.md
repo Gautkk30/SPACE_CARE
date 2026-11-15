@@ -45,7 +45,7 @@ Compounding these hazards, deep space transit involves communication latencies o
 
 ### Live End-to-End Demo Walkthrough (< 30s)
 
-🎥 **Video Demonstration**: [Watch / Download SPACECARE Live Demo Walkthrough (1440x900, WebM)](docs/demo/SPACECARE_live_demo.webm)
+https://github.com/user-attachments/assets/871cd9c8-2996-481d-b0b2-5c0d845d7a72
 
 A rapid, full-coverage operational walkthrough of the running SPACECARE system in under 30 seconds:
 - **0:00 – 0:05:** Animated NASA Mission Briefing overlay, Earth–Mars latency comparison, and HUD console launch.
