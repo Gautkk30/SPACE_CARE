@@ -9,6 +9,12 @@ import { ShieldCheck, Info } from 'lucide-react';
 
 interface OverviewDashboardProps {
   crew: AstronautProfile[];
+  selectedAstronaut?: AstronautProfile | null;
+  onSelectAstronaut: (id: string) => void;
+  alerts: HealthAlert[];
+  missionSummary?: MissionSummary | null;
+}
+  crew: AstronautProfile[];
   selectedAstronaut: AstronautProfile;
   onSelectAstronaut: (id: string) => void;
   alerts: HealthAlert[];
