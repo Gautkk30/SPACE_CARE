@@ -57,9 +57,10 @@ origins = [
     if origin.strip()
 ]
 
+# Development-friendly CORS – allow any origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # <-- widened for local dev (change to specific origins for production)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

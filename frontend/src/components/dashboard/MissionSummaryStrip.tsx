@@ -33,7 +33,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             Mission Clock
           </span>
           <span className="text-base font-semibold text-space-text mt-1 font-mono tabular-nums">
-            MET Day {summary.missionElapsedDays}
+            MET Day {summary?.missionElapsedDays ?? '--'}
           </span>
           <span className="text-[11px] text-space-muted truncate">
             {summary.missionName}
