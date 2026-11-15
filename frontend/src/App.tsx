@@ -1,3 +1,4 @@
+// App entry point – renders either the landing page or the main dashboard.
 import { useState } from 'react';
 import { TabId } from './types/spacecare';
 import { TelemetryProvider, useTelemetry } from './context/TelemetryContext';
@@ -14,19 +15,15 @@ import { AlertsPage } from './pages/AlertsPage';
 import { HealthReportsPage } from './pages/HealthReportsPage';
 import { HazardSimulatorPage } from './pages/HazardSimulatorPage';
 import { ManualHealthInputPage } from './pages/ManualHealthInputPage';
+import { Osd946QcDashboard } from './components/research/Osd946QcDashboard';
 import LandingPage from './pages/LandingPage';
 
+// ------------------- Dashboard Content -------------------
 function SpacecareAppContent() {
-  // Determine initial tab from URL query param (e.g., ?view=dashboard&tab=vitals)
+  // When the dashboard is active we may keep a tab in the URL (e.g. ?tab=vitals).
   const params = new URLSearchParams(window.location.search);
   const initialTab = (params.get('tab') as TabId) || 'overview';
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-
-  // Determine initial tab from URL query param (e.g., ?view=dashboard&tab=vitals)
-  const params = new URLSearchParams(window.location.search);
-  const initialTab = (params.get('tab') as TabId) || 'overview';
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   const {
     crew,
@@ -142,9 +139,11 @@ function SpacecareAppContent() {
 }
 
 export default function App() {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view'); // "dashboard" or null/"landing"
   return (
     <TelemetryProvider>
-      <SpacecareAppContent />
+      {view === 'dashboard' ? <SpacecareAppContent /> : <LandingPage />}
     </TelemetryProvider>
   );
 }
