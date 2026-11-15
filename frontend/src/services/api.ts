@@ -102,7 +102,7 @@ class SpacecareApiService {
         try {
           const healthController = new AbortController();
           const healthTimer = setTimeout(() => healthController.abort(), 800);
-          const healthRes = await fetch(`${API_BASE_URL}/api/v1/health`, {
+          const healthRes = await fetch(`${API_BASE_URL}/api/v1/vitals/health`, {
             signal: healthController.signal,
           });
           clearTimeout(healthTimer);

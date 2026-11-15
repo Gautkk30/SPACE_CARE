@@ -7,7 +7,6 @@ interface MissionSummaryStripProps {
   activeAlertCount: number;
 }
 
-
 export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
   summary,
   activeAlertCount,
@@ -85,7 +84,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             )}
           </div>
           <span className="text-[11px] text-space-muted">
-            Clinical Rule & ML Engine
+            Clinical Rule &amp; ML Engine
           </span>
         </div>
 
@@ -93,7 +92,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
         <div className="flex flex-col col-span-2 md:col-span-1 lg:col-span-2">
           <span className="text-xs uppercase tracking-wider text-space-dim flex items-center gap-1.5 font-medium">
             <Sun className="w-3.5 h-3.5 text-space-red" />
-            Radiation & Space Weather
+            Radiation &amp; Space Weather
           </span>
           <span className="text-sm font-semibold text-space-red mt-1 truncate" title={summary.spaceWeatherCondition}>
             {summary.spaceWeatherCondition}
