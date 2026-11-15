@@ -9,10 +9,10 @@ import { ShieldCheck, Info } from 'lucide-react';
 
 interface OverviewDashboardProps {
   crew: AstronautProfile[];
-  selectedAstronaut: AstronautProfile;
+  selectedAstronaut?: AstronautProfile | null;
   onSelectAstronaut: (id: string) => void;
   alerts: HealthAlert[];
-  missionSummary: MissionSummary;
+  missionSummary?: MissionSummary | null;
 }
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
@@ -22,6 +22,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   alerts,
   missionSummary,
 }) => {
+  // Guard against null/undefined selectedAstronaut.
+  const effectiveAstronaut = selectedAstronaut ?? (crew && crew.length > 0 ? crew[0] : null);
+  const selectedAstronautId = effectiveAstronaut ? effectiveAstronaut.id : '';
+
   return (
     <div className="space-y-6">
       {/* Top Mission Metrics Strip */}
@@ -33,15 +37,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* Crew Overview Grid */}
       <CrewOverviewCards
         crew={crew}
-        selectedAstronautId={selectedAstronaut.id}
+        selectedAstronautId={selectedAstronautId}
         onSelectAstronaut={onSelectAstronaut}
       />
 
       {/* Selected Astronaut Biometrics Row */}
-      <VitalSignsCards astronaut={selectedAstronaut} />
+      {effectiveAstronaut && <VitalSignsCards astronaut={effectiveAstronaut} />}
 
       {/* 24-Hour Trends Chart */}
-      <VitalTrendCharts astronaut={selectedAstronaut} />
+      {effectiveAstronaut && <VitalTrendCharts astronaut={effectiveAstronaut} />}
 
       {/* Early Warning Alerts Queue */}
       <RecentAlertsPanel alerts={alerts} />
@@ -51,7 +55,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-space-cyan shrink-0" />
           <span>
-            <strong className="text-space-muted">SPACECARE Prototype</strong> &bull; NASA Space Apps Challenge 2026. For spaceflight health monitoring research & demonstration only. Not a certified clinical diagnostic system.
+            <strong className="text-space-muted">SPACECARE Prototype</strong> • NASA Space Apps Challenge 2026. For spaceflight health monitoring research & demonstration only. Not a certified clinical diagnostic system.
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0 font-mono text-[11px] text-space-dim">

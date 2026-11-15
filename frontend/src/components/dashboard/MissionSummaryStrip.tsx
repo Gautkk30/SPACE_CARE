@@ -3,7 +3,7 @@ import { Users, AlertTriangle, Radio, Sun, Clock, Database } from 'lucide-react'
 import { MissionSummary } from '../../types/spacecare';
 
 interface MissionSummaryStripProps {
-  summary: MissionSummary;
+  summary?: MissionSummary | null;
   activeAlertCount: number;
 }
 
@@ -11,6 +11,18 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
   summary,
   activeAlertCount,
 }) => {
+  // Defensive handling for potentially null or undefined summary data
+  if (!summary) {
+    // Render a minimal placeholder or loading state
+    return (
+      <div className="bg-space-panel border border-space-border rounded-xl p-4 lg:p-5 shadow-lg">
+        <div className="text-xs uppercase tracking-wider text-space-dim font-medium">
+          No Mission Data Available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-space-panel border border-space-border rounded-xl p-4 lg:p-5 shadow-lg">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -72,7 +84,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
             )}
           </div>
           <span className="text-[11px] text-space-muted">
-            Clinical Rule & ML Engine
+            Clinical Rule &amp; ML Engine
           </span>
         </div>
 
@@ -80,7 +92,7 @@ export const MissionSummaryStrip: React.FC<MissionSummaryStripProps> = ({
         <div className="flex flex-col col-span-2 md:col-span-1 lg:col-span-2">
           <span className="text-xs uppercase tracking-wider text-space-dim flex items-center gap-1.5 font-medium">
             <Sun className="w-3.5 h-3.5 text-space-red" />
-            Radiation & Space Weather
+            Radiation &amp; Space Weather
           </span>
           <span className="text-sm font-semibold text-space-red mt-1 truncate" title={summary.spaceWeatherCondition}>
             {summary.spaceWeatherCondition}

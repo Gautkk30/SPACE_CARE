@@ -1,3 +1,4 @@
+
 """SPACECARE Backend Application Entry Point
 NASA Space Apps Challenge 2026
 
@@ -19,26 +20,40 @@ from app.api.routes import research, health, radiation
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables and seed demo astronauts (all profiles)
+    # Initialize database tables and seed demo astronauts
     init_db()
     yield
 
+
 app = FastAPI(
-    title=settings.PROJECT_NAME,
+    title="SPACECARE API",
     description="Intelligent Astronaut Health Monitoring & Early Warning System",
-    version=settings.VERSION,
+    version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
 )
 
-# Configure CORS.
+# Configure CORS
 allowed_origins_raw = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5174,http://127.0.0.1:5174",
+    (
+        "http://localhost:5173,"
+        "http://127.0.0.1:5173,"
+        "http://localhost:3000,"
+        "http://127.0.0.1:3000,"
+        "http://localhost:3001,"
+        "http://127.0.0.1:3001,"
+        "http://localhost:5174,"
+        "http://127.0.0.1:5174"
+    ),
 )
 
-origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
+origins = [
+    origin.strip()
+    for origin in allowed_origins_raw.split(",")
+    if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,8 +63,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", tags=["Root"])
 async def root():
+    """Service information and readiness status."""
     return {
         "project": "SPACECARE",
         "description": "Intelligent Astronaut Health Monitoring & Early Warning System",
@@ -58,8 +75,10 @@ async def root():
         "documentation": "/docs",
     }
 
+
 @app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
 async def health_check():
+    """Health check endpoint for service monitoring."""
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -67,13 +86,25 @@ async def health_check():
         "version": settings.VERSION,
     }
 
-# ===========================================================================
-# Route registrations:
-# ===========================================================================
+
+# API route registrations
 app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(research.router, prefix=f"{settings.API_V1_STR}/research", tags=["Research"])
-app.include_router(health.router, prefix=f"{settings.API_V1_STR}/vitals", tags=["Vitals"])
-app.include_router(radiation.router, prefix=f"{settings.API_V1_STR}/radiation", tags=["Radiation"])
+app.include_router(
+    research.router,
+    prefix=f"{settings.API_V1_STR}/research",
+    tags=["Research"],
+)
+app.include_router(
+    health.router,
+    prefix=f"{settings.API_V1_STR}/vitals",
+    tags=["Vitals"],
+)
+app.include_router(
+    radiation.router,
+    prefix=f"{settings.API_V1_STR}/radiation",
+    tags=["Radiation"],
+)
+
 
 if __name__ == "__main__":
     import uvicorn
