@@ -185,7 +185,13 @@ export const RadiationPage = () => {
             </div>
             <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
               <span>Crew Peak Career Dose</span>
-              <span className="text-space-cyan">30.8% (Elena R.)</span>
+              <span className="text-space-cyan">
+                {(() => {
+                  if (!rad.crewDoses || rad.crewDoses.length === 0) return 'N/A';
+                  const peak = rad.crewDoses.reduce((max, c) => (c.careerLimitPct > max.careerLimitPct ? c : max), rad.crewDoses[0]);
+                  return `${peak.careerLimitPct}% (${peak.astronautName.split(' ').pop() || peak.astronautName})`;
+                })()}
+              </span>
             </div>
           </div>
         </div>

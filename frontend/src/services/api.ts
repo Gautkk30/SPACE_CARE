@@ -244,21 +244,45 @@ class SpacecareApiService {
       // Merge SQLite attributes with existing rich UI profiles if matching
       const mappedCrew: AstronautProfile[] = res.data.map((dbAstro) => {
         const existing = MOCK_ASTRONAUTS.find((m) => m.id === dbAstro.id) || MOCK_ASTRONAUTS[0];
+        const initials = (dbAstro.name || 'Astronaut')
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
         return {
           ...existing,
           id: dbAstro.id,
           name: dbAstro.name,
+          callsign: existing.id === dbAstro.id ? existing.callsign : `${dbAstro.id.toUpperCase()}`,
           role: dbAstro.role,
           age: dbAstro.age,
           gender: dbAstro.gender,
           mission: dbAstro.mission,
           is_demo: dbAstro.is_demo,
+          avatarInitials: initials,
           baseline_heart_rate: dbAstro.baseline_heart_rate,
           baseline_systolic_bp: dbAstro.baseline_systolic_bp,
           baseline_diastolic_bp: dbAstro.baseline_diastolic_bp,
           baseline_spo2: dbAstro.baseline_spo2,
           baseline_body_temperature: dbAstro.baseline_body_temperature,
           baseline_respiration_rate: dbAstro.baseline_respiration_rate,
+          baseline: {
+            ...existing.baseline,
+            restingHeartRate: dbAstro.baseline_heart_rate ?? existing.baseline?.restingHeartRate ?? 72,
+            minHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) - 15),
+            maxHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) + 18),
+            restingSystolicBP: dbAstro.baseline_systolic_bp ?? existing.baseline?.restingSystolicBP ?? 120,
+            restingDiastolicBP: dbAstro.baseline_diastolic_bp ?? existing.baseline?.restingDiastolicBP ?? 80,
+            baselineSpO2: dbAstro.baseline_spo2 ?? existing.baseline?.baselineSpO2 ?? 98.2,
+            minSpO2Nominal: 95.0,
+            baselineCoreTemp: dbAstro.baseline_body_temperature ?? existing.baseline?.baselineCoreTemp ?? 36.8,
+            respiratoryRateRange: [
+              dbAstro.baseline_respiration_rate ?? existing.baseline?.respiratoryRateRange?.[0] ?? 12,
+              (dbAstro.baseline_respiration_rate ? dbAstro.baseline_respiration_rate + 4 : existing.baseline?.respiratoryRateRange?.[1]) ?? 18,
+            ],
+            baselineHrvRmssd: existing.id === dbAstro.id ? (existing.baseline?.baselineHrvRmssd ?? 44) : 45,
+          },
         };
       });
       return {

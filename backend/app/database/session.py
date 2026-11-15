@@ -2,8 +2,7 @@
 SQLAlchemy 2.x implementation with SQLite support.
 """
 
-from datetime import datetime, timezone
-from typing import Generator, List, Dict, Any, Optional
+from typing import Generator, Dict, Any
 
 from sqlalchemy import create_engine, select, event
 from sqlalchemy.engine import Engine
@@ -53,72 +52,6 @@ DEMO_ASTRONAUT: Dict[str, Any] = {
     "is_demo": True,
 }
 
-# Four distinct fictional astronaut profiles (strictly demonstration profiles; synthetic non-validated baselines)
-FOUR_FICTIONAL_ASTRONAUTS: List[Dict[str, Any]] = [
-    {
-        "id": "astro_morgan",
-        "name": "Commander Alex Morgan",
-        "role": "Mission Commander",
-        "age": 42,
-        "gender": "Female",
-        "mission": "Artemis Gateway Expedition II",
-        "baseline_heart_rate": 65.0,
-        "baseline_systolic_bp": 116.0,
-        "baseline_diastolic_bp": 74.0,
-        "baseline_spo2": 98.6,
-        "baseline_body_temperature": 36.7,
-        "baseline_respiration_rate": 13.0,
-        "is_demo": True,
-    },
-    {
-        "id": "astro_reynolds",
-        "name": "Dr. Maya Reynolds",
-        "role": "Flight Surgeon",
-        "age": 39,
-        "gender": "Female",
-        "mission": "Artemis Gateway Expedition II",
-        "baseline_heart_rate": 68.0,
-        "baseline_systolic_bp": 114.0,
-        "baseline_diastolic_bp": 72.0,
-        "baseline_spo2": 99.0,
-        "baseline_body_temperature": 36.6,
-        "baseline_respiration_rate": 14.0,
-        "is_demo": True,
-    },
-    {
-        "id": "astro_carter",
-        "name": "Daniel Carter",
-        "role": "Flight Engineer",
-        "age": 35,
-        "gender": "Male",
-        "mission": "Artemis Gateway Expedition II",
-        "baseline_heart_rate": 74.0,
-        "baseline_systolic_bp": 122.0,
-        "baseline_diastolic_bp": 80.0,
-        "baseline_spo2": 97.8,
-        "baseline_body_temperature": 36.9,
-        "baseline_respiration_rate": 16.0,
-        "is_demo": True,
-    },
-    {
-        "id": "astro_bennett",
-        "name": "Sofia Bennett",
-        "role": "Mission Specialist",
-        "age": 33,
-        "gender": "Female",
-        "mission": "Artemis Gateway Expedition II",
-        "baseline_heart_rate": 62.0,
-        "baseline_systolic_bp": 112.0,
-        "baseline_diastolic_bp": 70.0,
-        "baseline_spo2": 98.9,
-        "baseline_body_temperature": 36.5,
-        "baseline_respiration_rate": 12.0,
-        "is_demo": True,
-    },
-]
-
-ALL_DEMO_ASTRONAUTS: List[Dict[str, Any]] = [DEMO_ASTRONAUT] + FOUR_FICTIONAL_ASTRONAUTS
-
 def get_db() -> Generator[Session, None, None]:
     """FastAPI dependency yielding an independent database session per request with guaranteed teardown."""
     db = SessionLocal()
@@ -140,30 +73,8 @@ def seed_demo_astronaut(db_session: Session) -> bool:
         return True
     return False
 
-def seed_additional_astronauts(db_session: Session) -> int:
-    """Idempotently seeds the four fictional demonstration astronaut profiles."""
-    from app.models.astronaut import Astronaut
-
-    newly_seeded = 0
-    for astro_data in FOUR_FICTIONAL_ASTRONAUTS:
-        stmt = select(Astronaut).where(Astronaut.id == astro_data["id"])
-        existing = db_session.execute(stmt).scalar_one_or_none()
-        if existing is None:
-            astro_obj = Astronaut(**astro_data)
-            db_session.add(astro_obj)
-            newly_seeded += 1
-    if newly_seeded > 0:
-        db_session.commit()
-    return newly_seeded
-
-def seed_all_demo_astronauts(db_session: Session) -> int:
-    """Idempotently seeds all five demonstration astronaut profiles."""
-    seeded_count = 1 if seed_demo_astronaut(db_session) else 0
-    seeded_count += seed_additional_astronauts(db_session)
-    return seeded_count
-
-def init_db(target_engine=None, seed_all: Optional[bool] = None) -> None:
-    """Initializes database tables and seeds demo astronauts idempotently."""
+def init_db(target_engine=None, seed_all: Any = None) -> None:
+    """Initializes database tables and seeds demo astronaut idempotently."""
     active_engine = target_engine or engine
     # Ensure models are imported so that Base.metadata knows about them
     from app.models.astronaut import Astronaut  # noqa: F401
@@ -172,10 +83,5 @@ def init_db(target_engine=None, seed_all: Optional[bool] = None) -> None:
 
     Base.metadata.create_all(bind=active_engine)
 
-    should_seed_all = (target_engine is None) if seed_all is None else seed_all
-
     with Session(active_engine) as session:
-        if should_seed_all:
-            seed_all_demo_astronauts(session)
-        else:
-            seed_demo_astronaut(session)
+        seed_demo_astronaut(session)
