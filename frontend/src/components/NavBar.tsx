@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 // Simple responsive navigation bar used on the landing page.
 export default function NavBar() {

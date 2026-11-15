@@ -1,5 +1,5 @@
 import NavBar from '../components/NavBar';
-import { ArrowRight, BarChart2, ShieldCheck, Mic, User2, Cloud } from 'lucide-react';
+import { BarChart2, ShieldCheck, Mic, User2 } from 'lucide-react';
 
 export default function LandingPage() {
   const navigateDashboard = () => {
