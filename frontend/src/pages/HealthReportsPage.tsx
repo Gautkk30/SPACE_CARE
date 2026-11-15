@@ -93,8 +93,8 @@ export const HealthReportsPage = ({
       <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
         {/* Astronaut Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-space-dim flex items-center gap-1">
-            <User className="w-3.5 h-3.5" /> Astronaut Focus:
+          <span className="text-space-dim flex items-center gap-1 font-mono">
+            <User className="w-3.5 h-3.5" /> Astronaut Focus ({crew.length}):
           </span>
           <select
             value={selectedAstronautId}

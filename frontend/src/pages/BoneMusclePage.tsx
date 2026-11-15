@@ -40,15 +40,15 @@ interface CustomTooltipProps {
 const DarkBoneTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-space-panel border border-space-border-light p-3 rounded-lg shadow-2xl text-xs font-mono">
-        <p className="text-space-cyan font-bold mb-1.5">{label}</p>
+      <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg px-3 py-2 shadow-xl text-xs font-mono tabular-nums">
+        <p className="text-sky-400 font-bold mb-1.5">{label}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-0.5">
-            <span className="text-space-muted flex items-center gap-1.5">
+            <span className="text-slate-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               {entry.name}:
             </span>
-            <span className="font-semibold text-space-text">
+            <span className="font-semibold text-white">
               {entry.value}%
             </span>
           </div>
@@ -258,20 +258,39 @@ export const BoneMusclePage = ({ selectedAstronaut, onNavigateTab }: BoneMuscleP
                 <XAxis dataKey="label" stroke="#64748B" fontSize={10} tickLine={false} />
                 <YAxis stroke="#64748B" fontSize={10} tickLine={false} domain={[-5.0, 0.5]} />
                 <Tooltip content={<DarkBoneTooltip />} />
-                <ReferenceLine y={0} stroke="#2A3C60" />
+                {/* NASA Blue Baseline Line */}
+                <ReferenceLine
+                  y={0}
+                  stroke="#3B82F6"
+                  strokeDasharray="3 3"
+                  label={{ value: 'BASE (0.0%)', fill: '#3B82F6', fontSize: 9, position: 'insideRight' }}
+                />
+                {/* Clinical Concern Threshold */}
                 <ReferenceLine
                   y={-3.0}
-                  stroke="#EF4444"
+                  stroke="#FC3D21"
                   strokeDasharray="4 4"
-                  label={{ value: 'Clinical Concern (-3.0%)', fill: '#EF4444', fontSize: 9, position: 'insideBottomRight' }}
+                  label={{ value: 'CLINICAL CONCERN (-3.0%)', fill: '#FC3D21', fontSize: 9, position: 'insideBottomRight' }}
                 />
                 <Line
                   type="monotone"
                   dataKey="actualBmdLossPct"
                   name="Astronaut Actual BMD Delta"
-                  stroke="#06B6D4"
+                  stroke="#38BDF8"
                   strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#06B6D4' }}
+                  dot={(p) => {
+                    const { cx, cy, index } = p;
+                    if (index === musculoskeletal.history.length - 1) {
+                      return (
+                        <g key={`edge-dot-bmd-${index}`}>
+                          <circle cx={cx} cy={cy} r={7} fill="#38BDF8" fillOpacity={0.3} />
+                          <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#38BDF8" strokeWidth={2} />
+                        </g>
+                      );
+                    }
+                    return <circle key={`dot-bmd-${index}`} cx={cx} cy={cy} r={3} fill="#38BDF8" />;
+                  }}
+                  activeDot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
@@ -290,8 +309,30 @@ export const BoneMusclePage = ({ selectedAstronaut, onNavigateTab }: BoneMuscleP
                 <YAxis yAxisId="loss" stroke="#64748B" fontSize={10} tickLine={false} domain={[-6.0, 0.5]} />
                 <YAxis yAxisId="ared" orientation="right" stroke="#10B981" fontSize={10} tickLine={false} domain={[70, 105]} />
                 <Tooltip content={<DarkBoneTooltip />} />
-                <Bar yAxisId="loss" dataKey="leanMuscleLossPct" name="Lean Muscle Delta (%)" fill="#EF4444" opacity={0.65} radius={[4, 4, 0, 0]} />
-                <Line yAxisId="ared" type="monotone" dataKey="aredCompliancePct" name="ARED Adherence (%)" stroke="#10B981" strokeWidth={2.5} dot={{ r: 3 }} />
+                <ReferenceLine yAxisId="loss" y={0} stroke="#3B82F6" strokeDasharray="3 3" />
+                <ReferenceLine yAxisId="ared" y={90} stroke="#10B981" strokeDasharray="4 4" label={{ value: 'ARED TARGET (90%)', fill: '#10B981', fontSize: 9, position: 'insideTopRight' }} />
+                <Bar yAxisId="loss" dataKey="leanMuscleLossPct" name="Lean Muscle Delta (%)" fill="#FC3D21" opacity={0.65} radius={[4, 4, 0, 0]} />
+                <Line
+                  yAxisId="ared"
+                  type="monotone"
+                  dataKey="aredCompliancePct"
+                  name="ARED Adherence (%)"
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  dot={(p) => {
+                    const { cx, cy, index } = p;
+                    if (index === musculoskeletal.history.length - 1) {
+                      return (
+                        <g key={`edge-dot-ared-${index}`}>
+                          <circle cx={cx} cy={cy} r={7} fill="#10B981" fillOpacity={0.3} />
+                          <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#10B981" strokeWidth={2} />
+                        </g>
+                      );
+                    }
+                    return <circle key={`dot-ared-${index}`} cx={cx} cy={cy} r={3} fill="#10B981" />;
+                  }}
+                  activeDot={{ r: 4 }}
+                />
               </ComposedChart>
             )}
           </ResponsiveContainer>

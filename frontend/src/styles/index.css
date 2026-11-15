@@ -2,36 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==============================================================================
+ * NASA Minimal & Premium Design Tokens — Mission-Control Aesthetic
+ * ============================================================================== */
+
 :root {
   color-scheme: dark;
+  --nasa-canvas: #060911;
+  --nasa-surface: rgba(12, 18, 32, 0.78);
+  --nasa-surface-hover: rgba(18, 26, 44, 0.88);
+  --nasa-border: rgba(255, 255, 255, 0.08);
+  --nasa-border-bevel: rgba(255, 255, 255, 0.14);
+  --nasa-blue: #0B3D91;
+  --nasa-blue-hover: #1A56DB;
+  --nasa-blue-ring: #3B82F6;
+  --nasa-red: #FC3D21;
+  --nasa-white: #F8FAFC;
+  --nasa-muted: #94A3B8;
+  --nasa-dim: #64748B;
+  --nasa-nominal: #10B981;
+  --nasa-caution: #F59E0B;
 }
 
 body {
   margin: 0;
-  background-color: #060B19;
-  color: #F1F5F9;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  background-color: var(--nasa-canvas);
+  color: var(--nasa-white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(11, 61, 145, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(252, 61, 33, 0.04) 0%, transparent 35%);
+  background-attachment: fixed;
 }
 
-/* Custom workstation scrollbar */
+/* ==============================================================================
+ * Number Discipline & Tabular Alignment (Prevents Digits Jittering)
+ * ============================================================================== */
+.font-mono,
+.tabular-nums,
+[data-tabular="true"],
+input[type="number"],
+.recharts-text,
+.metric-value {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* ==============================================================================
+ * Elevated Console Card Surface
+ * ============================================================================== */
+.nasa-card,
+.bg-space-panel {
+  background: rgba(12, 18, 32, 0.78) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.nasa-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Sub-panels inside main cards */
+.bg-space-bg\/60,
+.bg-space-bg\/80,
+.bg-space-bg\/90 {
+  background: rgba(6, 9, 17, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ==============================================================================
+ * Custom NASA Mission-Control Scrollbar
+ * ============================================================================== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #060B19;
+  background: #060911;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2D4A;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2A3C60;
+  background: #0B3D91;
+}
+
+/* ==============================================================================
+ * Micro-Typography Utilities
+ * ============================================================================== */
+.nasa-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+}
+
+.nasa-active-nav-border {
+  border-left: 2px solid #1A56DB;
+  background: linear-gradient(90deg, rgba(11, 61, 145, 0.28) 0%, transparent 100%);
 }

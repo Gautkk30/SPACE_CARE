@@ -35,15 +35,15 @@ interface CustomTooltipProps {
 const DarkRadiationTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-space-panel border border-space-border-light p-3 rounded-lg shadow-2xl text-xs font-mono">
-        <p className="text-space-cyan font-bold mb-1.5">{label}</p>
+      <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg px-3 py-2 shadow-xl text-xs font-mono tabular-nums">
+        <p className="text-sky-400 font-bold mb-1.5">{label}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-0.5">
-            <span className="text-space-muted flex items-center gap-1.5">
+            <span className="text-slate-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               {entry.name}:
             </span>
-            <span className="font-semibold text-space-text">
+            <span className="font-semibold text-white">
               {entry.value} {entry.name.includes('Rate') ? 'µGy/hr' : 'mSv'}
             </span>
           </div>
@@ -64,25 +64,25 @@ export const RadiationPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-space-border/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-space-cyan-muted text-space-cyan border border-space-cyan/30 mb-2">
-            <Sun className="w-3.5 h-3.5 text-space-red" />
+          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-[#0B3D91]/25 text-sky-400 border border-[#1A56DB]/40 mb-2 tabular-nums">
+            <Sun className="w-3.5 h-3.5 text-[#FC3D21]" />
             Space Radiation & Solar Weather Surveillance
           </div>
-          <h1 className="text-2xl font-bold text-space-text">
+          <h1 className="text-2xl font-bold text-white">
             Cabin Dosimetry & DONKI Space Weather Feed
           </h1>
-          <p className="text-xs text-space-dim mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Galactic Cosmic Rays (GCR), Solar Particle Events (SPE), and crew career exposure management.
           </p>
         </div>
 
         {/* Storm Shelter Advisory Badge */}
-        <div className="flex items-center gap-2 bg-space-panel border border-space-border rounded-lg px-3 py-1.5 text-xs font-mono">
-          <ShieldAlert className="w-4 h-4 text-space-amber animate-pulse" />
-          <span className="text-space-dim">Storm Shelter Status:</span>
-          <span className={`font-bold ${isShelterActive ? 'text-space-amber' : 'text-space-emerald'}`}>
+        <div className="flex items-center gap-2 bg-space-panel border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs font-mono tabular-nums">
+          <ShieldAlert className="w-4 h-4 text-amber-400 animate-pulse" />
+          <span className="text-slate-400">Storm Shelter Status:</span>
+          <span className={`font-bold ${isShelterActive ? 'text-amber-400' : 'text-emerald-400'}`}>
             {rad.stormShelterStatus.replace('_', ' ')}
           </span>
         </div>
@@ -91,88 +91,88 @@ export const RadiationPage = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Current Dosimeter Rate */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Sun className="w-4 h-4 text-space-red" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Sun className="w-4 h-4 text-[#FC3D21]" />
               Dosimeter Rate
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-space-amber-muted text-space-amber border border-space-amber/30 animate-pulse">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 tabular-nums animate-pulse">
               Elevated Flux
             </span>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold font-mono text-space-amber">
+              <span className="text-3xl font-bold font-mono tabular-nums text-amber-400">
                 {rad.currentDosimeterRateMicroGyHr}
               </span>
-              <span className="text-xs text-space-muted">µGy / hr</span>
+              <span className="text-xs text-slate-400 font-mono">µGy / hr</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>GCR Background</span>
-              <span className="text-space-text">{rad.gcrBackgroundRateMicroGyHr} µGy/hr</span>
+              <span className="text-slate-300">{rad.gcrBackgroundRateMicroGyHr} µGy/hr</span>
             </div>
           </div>
         </div>
 
         {/* KPI 2: SPE Active Contribution */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Radio className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Radio className="w-4 h-4 text-sky-400" />
               Active SPE Proton Flux
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-space-cyan-muted text-space-cyan border border-space-cyan/30">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 tabular-nums">
               S1 Minor
             </span>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold font-mono text-space-cyan">
+              <span className="text-3xl font-bold font-mono tabular-nums text-sky-300">
                 +{rad.speRateMicroGyHr}
               </span>
-              <span className="text-xs text-space-muted">µGy / hr</span>
+              <span className="text-xs text-slate-400 font-mono">µGy / hr</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>Decay Phase Window</span>
-              <span className="text-space-text">~6.5 hrs remain</span>
+              <span className="text-slate-300">~6.5 hrs remain</span>
             </div>
           </div>
         </div>
 
         {/* KPI 3: Cumulative Mission Dose */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-space-emerald" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-emerald-400" />
               Cumulative Mission Dose
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-space-emerald-muted text-space-emerald border border-space-emerald/30">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 tabular-nums">
               Day 84 Total
             </span>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold font-mono text-space-text">
+              <span className="text-3xl font-bold font-mono tabular-nums text-white">
                 {rad.cumulativeMissionDoseMsv}
               </span>
-              <span className="text-xs text-space-muted">mSv</span>
+              <span className="text-xs text-slate-400 font-mono">mSv</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>Nominal Mission Budget</span>
-              <span className="text-space-text">120 mSv</span>
+              <span className="text-slate-300">120 mSv</span>
             </div>
           </div>
         </div>
 
         {/* KPI 4: Career Ceiling Ratio */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-sky-400" />
               NASA Career Limit
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-space-bg border border-space-border text-space-dim font-mono">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/40 border border-white/[0.08] text-slate-400 font-mono tabular-nums">
               NASA-STD-3001
             </span>
           </div>
@@ -234,30 +234,90 @@ export const RadiationPage = () => {
               <ComposedChart data={rad.timeline14d} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="speGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#FC3D21" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#FC3D21" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" vertical={false} />
                 <XAxis dataKey="dateLabel" stroke="#64748B" fontSize={10} tickLine={false} />
                 <YAxis stroke="#64748B" fontSize={10} tickLine={false} domain={[10, 55]} />
                 <Tooltip content={<DarkRadiationTooltip />} />
+                {/* NASA Blue GCR Background Reference Line */}
+                <ReferenceLine
+                  y={12}
+                  stroke="#3B82F6"
+                  strokeDasharray="3 3"
+                  label={{ value: 'GCR BASE (12 µGy/hr)', fill: '#3B82F6', fontSize: 9, position: 'insideBottomRight' }}
+                />
+                {/* Shelter Advisory Reference Line */}
                 <ReferenceLine
                   y={30}
                   stroke="#F59E0B"
                   strokeDasharray="4 4"
-                  label={{ value: 'Shelter Advisory Threshold (30 µGy/hr)', fill: '#F59E0B', fontSize: 9, position: 'insideTopRight' }}
+                  label={{ value: 'SHELTER ADVISORY (30 µGy/hr)', fill: '#F59E0B', fontSize: 9, position: 'insideTopRight' }}
                 />
-                <Area type="monotone" dataKey="dosimeterRateMicroGyHr" name="Total Dosimeter Rate" fill="url(#speGradient)" stroke="#EF4444" strokeWidth={2} />
-                <Line type="monotone" dataKey="gcrComponent" name="GCR Background Rate" stroke="#06B6D4" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                <Area type="monotone" dataKey="dosimeterRateMicroGyHr" name="Total Dosimeter Rate" fill="url(#speGradient)" stroke="#FC3D21" strokeWidth={2} />
+                <Line
+                  type="monotone"
+                  dataKey="dosimeterRateMicroGyHr"
+                  name="Total Dosimeter Rate (Edge)"
+                  stroke="#FC3D21"
+                  strokeWidth={0}
+                  dot={(p) => {
+                    const { cx, cy, index } = p;
+                    if (index === rad.timeline14d.length - 1) {
+                      return (
+                        <g key={`edge-dot-rad-${index}`}>
+                          <circle cx={cx} cy={cy} r={7} fill="#FC3D21" fillOpacity={0.3} />
+                          <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#FC3D21" strokeWidth={2} />
+                        </g>
+                      );
+                    }
+                    return <circle key={`dot-rad-${index}`} cx={cx} cy={cy} r={0} />;
+                  }}
+                  activeDot={{ r: 4 }}
+                />
+                <Line type="monotone" dataKey="gcrComponent" name="GCR Background Rate" stroke="#38BDF8" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
               </ComposedChart>
             ) : (
               <ComposedChart data={rad.timeline14d} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="cumDoseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" vertical={false} />
                 <XAxis dataKey="dateLabel" stroke="#64748B" fontSize={10} tickLine={false} />
                 <YAxis stroke="#64748B" fontSize={10} tickLine={false} domain={[44, 56]} />
                 <Tooltip content={<DarkRadiationTooltip />} />
-                <Line type="monotone" dataKey="cumulativeDoseMsv" name="Cumulative Mission Dose" stroke="#10B981" strokeWidth={2.5} dot={{ r: 3 }} />
+                <ReferenceLine
+                  y={50}
+                  stroke="#3B82F6"
+                  strokeDasharray="3 3"
+                  label={{ value: 'MISSION CEILING BASE (50 mSv)', fill: '#3B82F6', fontSize: 9, position: 'insideRight' }}
+                />
+                <Area type="monotone" dataKey="cumulativeDoseMsv" fill="url(#cumDoseGrad)" stroke="transparent" />
+                <Line
+                  type="monotone"
+                  dataKey="cumulativeDoseMsv"
+                  name="Cumulative Mission Dose"
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  dot={(p) => {
+                    const { cx, cy, index } = p;
+                    if (index === rad.timeline14d.length - 1) {
+                      return (
+                        <g key={`edge-dot-dose-${index}`}>
+                          <circle cx={cx} cy={cy} r={7} fill="#10B981" fillOpacity={0.3} />
+                          <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#10B981" strokeWidth={2} />
+                        </g>
+                      );
+                    }
+                    return <circle key={`dot-dose-${index}`} cx={cx} cy={cy} r={3} fill="#10B981" />;
+                  }}
+                  activeDot={{ r: 4 }}
+                />
               </ComposedChart>
             )}
           </ResponsiveContainer>

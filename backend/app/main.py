@@ -1,9 +1,7 @@
-"""
-SPACECARE Backend Application Entry Point
+"""SPACECARE Backend Application Entry Point
 NASA Space Apps Challenge 2026
 
-This module initializes the FastAPI application, registers middleware,
-and provides baseline health check and metadata endpoints.
+Initializes FastAPI app, middleware, and database.
 """
 
 from contextlib import asynccontextmanager
@@ -21,10 +19,9 @@ from app.api.routes import research, health, radiation
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables and seed demo astronauts
+    # Initialize database tables and seed demo astronauts (all profiles)
     init_db()
     yield
-
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -38,7 +35,7 @@ app = FastAPI(
 # Configure CORS.
 allowed_origins_raw = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5174,http://127.0.0.1:5174"
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5174,http://127.0.0.1:5174",
 )
 
 origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
@@ -51,7 +48,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/", tags=["Root"])
 async def root():
     return {
@@ -59,9 +55,8 @@ async def root():
         "description": "Intelligent Astronaut Health Monitoring & Early Warning System",
         "version": settings.VERSION,
         "status": "initialized",
-        "documentation": "/docs"
+        "documentation": "/docs",
     }
-
 
 @app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
 async def health_check():
@@ -69,18 +64,16 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "database": "initialized",
-        "version": settings.VERSION
+        "version": settings.VERSION,
     }
 
-
-# ==============================================================================
+# ===========================================================================
 # Route registrations:
-# ==============================================================================
+# ===========================================================================
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(research.router, prefix=f"{settings.API_V1_STR}/research", tags=["Research"])
 app.include_router(health.router, prefix=f"{settings.API_V1_STR}/vitals", tags=["Vitals"])
 app.include_router(radiation.router, prefix=f"{settings.API_V1_STR}/radiation", tags=["Radiation"])
-
 
 if __name__ == "__main__":
     import uvicorn
@@ -92,5 +85,5 @@ if __name__ == "__main__":
         "app.main:app",
         host=host,
         port=port,
-        reload=True
+        reload=True,
     )

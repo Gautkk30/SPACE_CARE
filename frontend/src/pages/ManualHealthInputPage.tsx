@@ -354,24 +354,24 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
   };
 
   const inputClass =
-    'w-full bg-space-bg border border-space-border rounded-lg px-3 py-2 text-space-text font-mono text-xs focus:outline-none focus:border-space-cyan transition';
+    'w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-2 text-white font-mono tabular-nums text-xs focus:outline-none focus:border-[#1A56DB] transition';
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-space-border/60">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-space-cyan-muted text-space-cyan border border-space-cyan/30 mb-2">
-            <ClipboardEdit className="w-3.5 h-3.5 text-space-cyan" />
+          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-[#0B3D91]/25 text-sky-400 border border-[#1A56DB]/40 mb-2 tabular-nums">
+            <ClipboardEdit className="w-3.5 h-3.5 text-sky-400" />
             Clinical Telemetry Ingestion Station
           </div>
-          <h1 className="text-2xl font-bold text-space-text flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <span>Manual Health Input Workstation</span>
-            <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded bg-space-panel border border-space-border text-space-muted">
+            <span className="text-xs font-mono tabular-nums font-normal px-2.5 py-0.5 rounded bg-black/40 border border-white/[0.08] text-slate-400">
               SQLAlchemy &bull; Telemetry Schema Aligned
             </span>
           </h1>
-          <p className="text-xs text-space-dim mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Flight Surgeon clinical portal for entering verified physiological telemetry into the SPACECARE monitoring architecture.
           </p>
         </div>
@@ -381,17 +381,17 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
           <button
             type="button"
             onClick={handleLoadBaseline}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-panel hover:bg-space-panel-hover border border-space-border text-space-muted hover:text-space-text text-xs transition font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white text-xs transition font-medium"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-space-cyan" />
+            <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
             <span>Load Baseline</span>
           </button>
           <button
             type="button"
             onClick={handleLoadSampleCaution}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-amber-muted/30 hover:bg-space-amber-muted/50 border border-space-amber/40 text-space-amber text-xs transition font-semibold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs transition font-semibold"
           >
-            <Sparkles className="w-3.5 h-3.5 text-space-amber" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Load Sample Caution</span>
           </button>
         </div>
@@ -401,30 +401,30 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* LEFT COLUMN: Data Entry Form (7 Columns) */}
         <div className="xl:col-span-7 space-y-4">
-          <form onSubmit={handleSubmit} className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-5">
+          <form noValidate onSubmit={handleSubmit} className="bg-space-panel border border-white/[0.08] rounded-xl p-5 shadow-lg space-y-5">
             {/* 1. Crew & Provenance Header Card */}
-            <div className="space-y-3 pb-4 border-b border-space-border/60">
+            <div className="space-y-3 pb-4 border-b border-white/[0.08]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-space-text uppercase tracking-wider flex items-center gap-2">
-                  <User className="w-4 h-4 text-space-cyan" />
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <User className="w-4 h-4 text-sky-400" />
                   1. Astronaut & Provenance Calibration
                 </span>
-                <span className="text-[10px] font-mono text-space-dim">Required Fields</span>
+                <span className="text-[10px] font-mono text-slate-400">Required Fields</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                 {/* Astronaut Selector */}
                 <div>
-                  <label className="text-[11px] font-mono text-space-dim uppercase block mb-1">
-                    Astronaut Subject
+                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
+                    Astronaut Subject ({crew.length})
                   </label>
                   <select
                     value={selectedAstronautId}
                     onChange={(e) => onSelectAstronaut(e.target.value)}
-                    className="w-full bg-space-bg border border-space-border rounded-lg px-3 py-2 text-space-text font-bold text-xs focus:outline-none focus:border-space-cyan cursor-pointer"
+                    className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-2 text-white font-bold text-xs focus:outline-none focus:border-[#1A56DB] cursor-pointer"
                   >
                     {crew.map((member) => (
-                      <option key={member.id} value={member.id} className="bg-space-panel text-space-text">
+                      <option key={member.id} value={member.id} className="bg-[#0c1220] text-white">
                         {member.name} ({member.id}) &bull; {member.role}
                       </option>
                     ))}
@@ -433,17 +433,17 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
 
                 {/* Data Source Provenance */}
                 <div>
-                  <label className="text-[11px] font-mono text-space-dim uppercase block mb-1">
+                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
                     Data Source (Provenance)
                   </label>
                   <select
                     value={dataSource}
                     onChange={(e) => setDataSource(e.target.value as DataSourceType)}
-                    className="w-full bg-space-bg border border-space-border rounded-lg px-3 py-2 text-space-text font-mono text-xs focus:outline-none focus:border-space-cyan cursor-pointer"
+                    className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-[#1A56DB] cursor-pointer"
                   >
-                    <option value="SENSOR_LIVE">SENSOR_LIVE (Direct Hardware Telemetry)</option>
-                    <option value="SYNTHETIC_SIMULATED">SYNTHETIC_SIMULATED (Algorithm / Test Input)</option>
-                    <option value="NASA_RESEARCH">NASA_RESEARCH (Open Science Data Archive)</option>
+                    <option value="SENSOR_LIVE" className="bg-[#0c1220]">SENSOR_LIVE (Direct Hardware Telemetry)</option>
+                    <option value="SYNTHETIC_SIMULATED" className="bg-[#0c1220]">SYNTHETIC_SIMULATED (Algorithm / Test Input)</option>
+                    <option value="NASA_RESEARCH" className="bg-[#0c1220]">NASA_RESEARCH (Open Science Data Archive)</option>
                   </select>
                 </div>
               </div>
@@ -452,13 +452,13 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                 {/* Timestamp Picker */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-mono text-space-dim uppercase flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-space-cyan" /> Timestamp (UTC)
+                    <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-sky-400" /> Timestamp (UTC)
                     </label>
                     <button
                       type="button"
                       onClick={handleResetTimestampNow}
-                      className="text-[10px] text-space-cyan hover:underline font-mono"
+                      className="text-[10px] text-sky-400 hover:underline font-mono"
                     >
                       Now (UTC)
                     </button>
@@ -475,8 +475,8 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
 
                 {/* Dataset Reference / Notes */}
                 <div>
-                  <label className="text-[11px] font-mono text-space-dim uppercase block mb-1 flex items-center gap-1">
-                    <FileText className="w-3 h-3 text-space-cyan" /> Dataset Ref / Flight Notes
+                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-sky-400" /> Dataset Ref / Flight Notes
                   </label>
                   <input
                     type="text"
@@ -492,21 +492,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
             {/* 2. Schema-Aligned Vital-Sign Inputs */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-space-text uppercase tracking-wider flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-space-cyan" />
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-sky-400" />
                   2. Physiological Biometrics (Telemetry Table Columns)
                 </span>
-                <span className="text-[10px] font-mono text-space-dim">Valid Ranges Enforced</span>
+                <span className="text-[10px] font-mono text-slate-400">Valid Ranges Enforced</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Heart Rate */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Heart className="w-3.5 h-3.5 text-space-red" /> Heart Rate (bpm)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Heart className="w-3.5 h-3.5 text-[#FC3D21]" /> Heart Rate (bpm)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.heartRate}</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.heartRate}</span>
                   </div>
                   <input
                     type="number"
@@ -517,21 +517,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, heartRate: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 30–220 bpm</span>
-                    <span className={deltas.hr !== 0 ? (deltas.hr > 15 ? 'text-space-red font-bold' : 'text-space-amber font-bold') : 'text-space-dim'}>
+                    <span className={deltas.hr !== 0 ? (deltas.hr > 15 ? 'text-[#FC3D21] font-bold' : 'text-amber-400 font-bold') : 'text-slate-400'}>
                       Delta: {deltas.hr >= 0 ? `+${deltas.hr}` : deltas.hr} bpm
                     </span>
                   </div>
                 </div>
 
                 {/* Blood Pressure Systolic */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Gauge className="w-3.5 h-3.5 text-space-amber" /> Systolic BP (mmHg)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-amber-400" /> Systolic BP (mmHg)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.systolicBP}</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.systolicBP}</span>
                   </div>
                   <input
                     type="number"
@@ -542,21 +542,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, systolicBP: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 60–240 mmHg</span>
-                    <span className={deltas.sys !== 0 ? (deltas.sys < -15 ? 'text-space-red font-bold' : 'text-space-amber font-bold') : 'text-space-dim'}>
+                    <span className={deltas.sys !== 0 ? (deltas.sys < -15 ? 'text-[#FC3D21] font-bold' : 'text-amber-400 font-bold') : 'text-slate-400'}>
                       Delta: {deltas.sys >= 0 ? `+${deltas.sys}` : deltas.sys} mmHg
                     </span>
                   </div>
                 </div>
 
                 {/* Blood Pressure Diastolic */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Gauge className="w-3.5 h-3.5 text-space-cyan" /> Diastolic BP (mmHg)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-sky-400" /> Diastolic BP (mmHg)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.diastolicBP}</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.diastolicBP}</span>
                   </div>
                   <input
                     type="number"
@@ -567,21 +567,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, diastolicBP: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 30–150 mmHg</span>
-                    <span className={deltas.dia !== 0 ? 'text-space-amber font-bold' : 'text-space-dim'}>
+                    <span className={deltas.dia !== 0 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
                       Delta: {deltas.dia >= 0 ? `+${deltas.dia}` : deltas.dia} mmHg
                     </span>
                   </div>
                 </div>
 
                 {/* SpO2 Saturation */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Wind className="w-3.5 h-3.5 text-space-cyan" /> SpO2 Saturation (%)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Wind className="w-3.5 h-3.5 text-sky-400" /> SpO2 Saturation (%)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.spo2}%</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.spo2}%</span>
                   </div>
                   <input
                     type="number"
@@ -593,21 +593,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, spo2: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 70.0–100.0%</span>
-                    <span className={deltas.spo2 !== 0 ? (deltas.spo2 < -3.0 ? 'text-space-red font-bold' : 'text-space-amber font-bold') : 'text-space-dim'}>
+                    <span className={deltas.spo2 !== 0 ? (deltas.spo2 < -3.0 ? 'text-[#FC3D21] font-bold' : 'text-amber-400 font-bold') : 'text-slate-400'}>
                       Delta: {deltas.spo2 >= 0 ? `+${deltas.spo2}%` : `${deltas.spo2}%`}
                     </span>
                   </div>
                 </div>
 
                 {/* Body Temperature */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Thermometer className="w-3.5 h-3.5 text-space-emerald" /> Core Temperature (°C)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Thermometer className="w-3.5 h-3.5 text-emerald-400" /> Core Temperature (°C)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.bodyTemperature}°C</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.bodyTemperature}°C</span>
                   </div>
                   <input
                     type="number"
@@ -619,21 +619,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, bodyTemperature: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 34.0–42.0°C</span>
-                    <span className={deltas.temp !== 0 ? (deltas.temp > 0.8 ? 'text-space-red font-bold' : 'text-space-amber font-bold') : 'text-space-dim'}>
+                    <span className={deltas.temp !== 0 ? (deltas.temp > 0.8 ? 'text-[#FC3D21] font-bold' : 'text-amber-400 font-bold') : 'text-slate-400'}>
                       Delta: {deltas.temp >= 0 ? `+${deltas.temp}°C` : `${deltas.temp}°C`}
                     </span>
                   </div>
                 </div>
 
                 {/* Respiration Rate */}
-                <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3 space-y-1">
+                <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-space-text flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-space-cyan" /> Respiration Rate (br/min)
+                    <label className="font-semibold text-white flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-sky-400" /> Respiration Rate (br/min)
                     </label>
-                    <span className="text-[10px] font-mono text-space-dim">Base: {baseline.respirationRate}</span>
+                    <span className="text-[10px] font-mono tabular-nums text-slate-400">Base: {baseline.respirationRate}</span>
                   </div>
                   <input
                     type="number"
@@ -644,9 +644,9 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                     onChange={(e) => setVitals({ ...vitals, respirationRate: e.target.value })}
                     className={inputClass}
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-space-dim pt-0.5">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-slate-400 pt-0.5">
                     <span>Range: 6–45 br/min</span>
-                    <span className={deltas.rr !== 0 ? 'text-space-amber font-bold' : 'text-space-dim'}>
+                    <span className={deltas.rr !== 0 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
                       Delta: {deltas.rr >= 0 ? `+${deltas.rr}` : deltas.rr} br/min
                     </span>
                   </div>
@@ -659,7 +659,7 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-space-cyan text-space-bg font-bold hover:bg-space-cyan/90 transition shadow-md shadow-space-cyan/20 disabled:opacity-50 text-xs"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-[#0B3D91] hover:bg-[#1A56DB] text-white font-bold transition shadow-sm disabled:opacity-50 text-xs"
               >
                 <Send className="w-4 h-4" />
                 <span>
@@ -728,21 +728,21 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
         {/* RIGHT COLUMN: Live Delta Pre-Submission Assessment & Recent Log (5 Columns) */}
         <div className="xl:col-span-5 space-y-5">
           {/* Live Clinical Assessment Card */}
-          <div className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-space-border/60">
+          <div className="bg-space-panel border border-white/[0.08] rounded-xl p-5 shadow-lg space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-space-cyan" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-space-text">
+                <ShieldAlert className="w-4 h-4 text-sky-400" />
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   Pre-Submission Assessment
                 </h3>
               </div>
               <span
-                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                className={`text-[10px] font-mono tabular-nums font-bold px-2 py-0.5 rounded-full border ${
                   assessment.status === 'CRITICAL'
-                    ? 'bg-space-red-muted text-space-red border-space-red/40 animate-pulse'
+                    ? 'bg-[#FC3D21]/15 text-[#FC3D21] border-[#FC3D21]/40 animate-pulse'
                     : assessment.status === 'CAUTION'
-                    ? 'bg-space-amber-muted text-space-amber border-space-amber/40'
-                    : 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
                 }`}
               >
                 {assessment.status}
@@ -750,30 +750,30 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3">
-                <span className="text-[11px] font-bold text-space-cyan uppercase block mb-1">
+              <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3">
+                <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider block mb-1">
                   1. What Is Changing:
                 </span>
-                <p className="text-space-text leading-relaxed">
+                <p className="text-white leading-relaxed">
                   {assessment.whatIsChanging}
                 </p>
               </div>
 
-              <div className="bg-space-bg/60 border border-space-border/60 rounded-lg p-3">
-                <span className="text-[11px] font-bold text-space-amber uppercase block mb-1">
+              <div className="bg-black/25 border border-white/[0.08] rounded-lg p-3">
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-1">
                   2. Clinical Significance in Spaceflight:
                 </span>
-                <p className="text-space-muted leading-relaxed">
+                <p className="text-slate-300 leading-relaxed">
                   {assessment.whyItMatters}
                 </p>
               </div>
 
-              <div className="bg-space-emerald/10 border border-space-emerald/30 rounded-lg p-3">
-                <span className="text-[11px] font-bold text-space-emerald uppercase block mb-1 flex items-center gap-1.5">
+              <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-lg p-3">
+                <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   3. Recommended Flight Surgeon Protocol:
                 </span>
-                <p className="text-space-text leading-relaxed">
+                <p className="text-white leading-relaxed">
                   {assessment.recommendation}
                 </p>
               </div>
@@ -781,22 +781,22 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
           </div>
 
           {/* Recent Manual Entries Log */}
-          <div className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-3">
-            <div className="flex items-center justify-between pb-3 border-b border-space-border/60">
+          <div className="bg-space-panel border border-white/[0.08] rounded-xl p-5 shadow-lg space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-space-cyan" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-space-text">
+                <History className="w-4 h-4 text-sky-400" />
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   Recent Manual Entries Log
                 </h3>
               </div>
-              <span className="text-xs font-mono text-space-dim">{submittedReadings.length} Recorded</span>
+              <span className="text-xs font-mono tabular-nums text-slate-400">{submittedReadings.length} Recorded</span>
             </div>
 
             {submittedReadings.length === 0 ? (
-              <div className="py-8 text-center text-space-dim space-y-2">
-                <Database className="w-8 h-8 text-space-cyan/40 mx-auto" />
-                <p className="text-xs font-semibold text-space-muted">No manual entries recorded in this session</p>
-                <p className="text-[11px] max-w-xs mx-auto">
+              <div className="py-8 text-center text-slate-400 space-y-2">
+                <Database className="w-8 h-8 text-sky-400/40 mx-auto" />
+                <p className="text-xs font-semibold text-slate-300">No manual entries recorded in this session</p>
+                <p className="text-[11px] max-w-xs mx-auto text-slate-400">
                   Submit readings using the form on the left to verify real-time delta tracking and backend transmission.
                 </p>
               </div>
@@ -805,23 +805,23 @@ export const ManualHealthInputPage: React.FC<ManualHealthInputPageProps> = ({
                 {submittedReadings.map((reading) => (
                   <div
                     key={reading.id}
-                    className="p-3 rounded-lg bg-space-bg/60 border border-space-border text-xs space-y-1.5"
+                    className="p-3 rounded-lg bg-black/25 border border-white/[0.08] text-xs space-y-1.5"
                   >
-                    <div className="flex items-center justify-between font-mono text-[11px]">
-                      <span className="text-space-cyan font-bold">
+                    <div className="flex items-center justify-between font-mono tabular-nums text-[11px]">
+                      <span className="text-sky-400 font-bold">
                         {reading.astronaut_id} &bull; {reading.data_source}
                       </span>
-                      <span className="text-space-dim">
+                      <span className="text-slate-400">
                         {new Date(reading.timestamp).toLocaleTimeString()} UTC
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-space-muted">
-                      <div>HR: <strong className="text-space-text">{reading.heart_rate}</strong> bpm</div>
-                      <div>BP: <strong className="text-space-text">{reading.systolic_bp}/{reading.diastolic_bp}</strong></div>
-                      <div>SpO2: <strong className="text-space-text">{reading.spo2}%</strong></div>
-                      <div>Temp: <strong className="text-space-text">{reading.body_temperature}°C</strong></div>
-                      <div>RR: <strong className="text-space-text">{reading.respiration_rate}</strong> br/m</div>
-                      <div className="truncate text-space-dim">{reading.dataset_reference || 'Manual Entry'}</div>
+                    <div className="grid grid-cols-3 gap-2 font-mono tabular-nums text-[11px] text-slate-400">
+                      <div>HR: <strong className="text-white">{reading.heart_rate}</strong> bpm</div>
+                      <div>BP: <strong className="text-white">{reading.systolic_bp}/{reading.diastolic_bp}</strong></div>
+                      <div>SpO2: <strong className="text-white">{reading.spo2}%</strong></div>
+                      <div>Temp: <strong className="text-white">{reading.body_temperature}°C</strong></div>
+                      <div>RR: <strong className="text-white">{reading.respiration_rate}</strong> br/m</div>
+                      <div className="truncate text-slate-400">{reading.dataset_reference || 'Manual Entry'}</div>
                     </div>
                   </div>
                 ))}
