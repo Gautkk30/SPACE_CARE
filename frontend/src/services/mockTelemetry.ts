@@ -389,10 +389,7 @@ export const MOCK_RADIATION_DATA: RadiationEnvironmentData = {
     },
   ],
   crewDoses: [
-    { astronautId: 'astro_01', astronautName: 'Elena Rostova', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 184.5, careerLimitMsv: 600, careerLimitPct: 30.8 },
-    { astronautId: 'astro_02', astronautName: 'Marcus Vance', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 98.4, careerLimitMsv: 600, careerLimitPct: 16.4 },
     { astronautId: 'astro_03', astronautName: 'Major Marcus Chen', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 122.0, careerLimitMsv: 600, careerLimitPct: 20.3 },
-    { astronautId: 'astro_04', astronautName: 'Dr. Sarah Lin', cumulativeMissionDoseMsv: 54.2, careerDoseMsv: 54.2, careerLimitMsv: 600, careerLimitPct: 9.0 },
   ],
 };
 
@@ -418,215 +415,10 @@ const marcusChenAI = generateAIAnalysis(
   ['Continue standard ARED and cycle ergometer protocol.', 'Scheduled lunar injection trajectory check.']
 );
 
-// Assemble Astronaut Profiles with ML Anomaly Attributions
+// Assemble Astronaut Profiles
 // ------------------------------------------------------------------------------
 
-// Elena Rostova
-const elenaTrends = generateTrends(64, 46, 116, 74, 98.4, 36.8, 14);
-const elenaCardio = generateCardiovascular(64, 116, 74, 46, 2, 91, 'Mild Cephalad Shift');
-const elenaMusculo = generateMusculoskeletal(-1.1, -0.9, -1.4, -2.1, 98, 96, 'LOW', 195);
-const elenaMental = generateMentalHealth(92, 3, 4, 1.9, 1.8, 3.6, 91, 'Feeling well adapted. Exercise countermeasure adherence high; cognitive clarity sustained.');
-const elenaAI = generateAIAnalysis(
-  'astro_01',
-  'Elena Rostova',
-  0.22,
-  'NOMINAL',
-  0.96,
-  0.4,
-  [
-    { featureName: 'Resting Heart Rate', featureKey: 'hr_rest', contributionPct: 24, observedValue: '66 bpm', nominalRange: '50-90 bpm', deviationZScore: 0.3, direction: 'ELEVATED' },
-    { featureName: 'SpO2 Oxygenation', featureKey: 'spo2', contributionPct: 18, observedValue: '98.2%', nominalRange: '>= 95%', deviationZScore: -0.2, direction: 'DEPRESSED' },
-    { featureName: 'ARED Compliance', featureKey: 'ared', contributionPct: 12, observedValue: '98%', nominalRange: '>= 90%', deviationZScore: 0.1, direction: 'ELEVATED' },
-    { featureName: 'Circadian Alignment', featureKey: 'circadian', contributionPct: 8, observedValue: '92/100', nominalRange: '>= 80', deviationZScore: 0.2, direction: 'ELEVATED' },
-  ],
-  'All biometric features oscillate within the personal pre-flight nominal statistical boundary (Z-score < 1.0). High countermeasure adherence has preserved bone mineral retention and orthostatic tolerance.',
-  ['Continue standard 2.5-hour daily countermeasure regime.', 'Routine weekly medical conference scheduled for Day 91.']
-);
-
-// Marcus Vance (Deconditioning & Autonomic Strain)
-const marcusTrends = generateTrends(68, 42, 120, 78, 98.0, 36.9, 14, { hour: 9, hrDelta: 20, spo2Delta: -1.6, sysDelta: 14 });
-const marcusCardio = generateCardiovascular(68, 120, 78, 42, 14, 68, 'Moderate Redistribution');
-const marcusMusculo = generateMusculoskeletal(-1.8, -1.6, -2.2, -4.6, 82, 80, 'ELEVATED', 315);
-const marcusMental = generateMentalHealth(78, 6, 3, 1.2, 1.4, 3.9, 78, 'Post-exercise recovery feeling sluggish. Mild leg heaviness during ergometer intervals.');
-const marcusAI = generateAIAnalysis(
-  'astro_02',
-  'Marcus Vance',
-  0.78,
-  'HIGH',
-  0.93,
-  2.8,
-  [
-    { featureName: 'HRV RMSSD Suppression', featureKey: 'hrv_rmssd', contributionPct: 38, observedValue: '19 ms', nominalRange: '>= 35 ms', deviationZScore: -2.8, direction: 'DEPRESSED' },
-    { featureName: 'Resting Tachycardia Drift', featureKey: 'hr_drift', contributionPct: 28, observedValue: '+14 bpm', nominalRange: '< +8 bpm', deviationZScore: 2.3, direction: 'ELEVATED' },
-    { featureName: 'Orthostatic Vulnerability', featureKey: 'ortho_score', contributionPct: 18, observedValue: '68/100', nominalRange: '>= 75', deviationZScore: -2.1, direction: 'DEPRESSED' },
-    { featureName: 'Urinary Calcium Elevation', featureKey: 'calcium', contributionPct: 16, observedValue: '315 mg/d', nominalRange: '< 250 mg/d', deviationZScore: 1.9, direction: 'ELEVATED' },
-  ],
-  'Multi-signal anomaly trigger: severe reduction in parasympathetic heart rate variability (RMSSD 19ms) combined with elevated resting heart rate (+14 bpm drift) indicates autonomic deconditioning and hypovolemia secondary to cephalad fluid shifting.',
-  [
-    'Administer oral isotonic electrolyte rehydration protocol (1.0 L saline equivalent).',
-    'Perform standing tilt test or LBNP (Lower Body Negative Pressure) evaluation.',
-    'Reduce subsequent ARED high-interval resistance loading by 15% until HRV stabilizes.',
-  ]
-);
-
-
-// Sarah Lin (Circadian Strain)
-const sarahTrends = generateTrends(62, 38, 112, 70, 99.0, 36.8, 14, { hour: 4, hrDelta: 12, spo2Delta: -0.9, sysDelta: 8 });
-const sarahCardio = generateCardiovascular(62, 112, 70, 38, 6, 83, 'Mild Cephalad Shift');
-const sarahMusculo = generateMusculoskeletal(-1.4, -1.2, -1.7, -2.8, 91, 88, 'LOW', 220);
-const sarahMental = generateMentalHealth(64, 7, 2, 0.9, 1.1, 2.8, 69, 'Sleep fragmented due to experiment schedule shift. Experiencing mild morning cognitive fog and screen glare fatigue.');
-const sarahAI = generateAIAnalysis(
-  'astro_04',
-  'Sarah Lin',
-  0.71,
-  'ELEVATED',
-  0.89,
-  2.1,
-  [
-    { featureName: 'Circadian Phase Delay', featureKey: 'circadian_lag', contributionPct: 36, observedValue: '64/100', nominalRange: '>= 80', deviationZScore: -2.3, direction: 'DEPRESSED' },
-    { featureName: 'Sleep Debt Accumulation', featureKey: 'sleep_hours', contributionPct: 30, observedValue: '3.8 hrs', nominalRange: '>= 7.0 hrs', deviationZScore: -2.0, direction: 'DEPRESSED' },
-    { featureName: 'Perceived Stress Index', featureKey: 'stress', contributionPct: 20, observedValue: '7/10', nominalRange: '<= 4/10', deviationZScore: 1.8, direction: 'ELEVATED' },
-    { featureName: 'HR Elevation during Sleep', featureKey: 'hr_sleep', contributionPct: 14, observedValue: '+8 bpm', nominalRange: '<= +3 bpm', deviationZScore: 1.4, direction: 'ELEVATED' },
-  ],
-  'Circadian rhythm desynchronosis secondary to non-24-hour science timeline shifts. Chronic light spectrum exposure in payload glovebox inducing delayed melatonin onset and elevated sympathetic tone.',
-  [
-    'Institute dynamic solid-state lighting protocol (dim 2700K blue-depleted mode).',
-    'Schedule 45-minute tactical sleep opportunity before next airlock duty.',
-    'Administer oral melatonin agonist countermeasure per NASA Behavioral Health guidelines.',
-  ]
-);
-
 export const MOCK_ASTRONAUTS: AstronautProfile[] = [
-  {
-    id: 'astro_01',
-    name: 'Elena Rostova',
-    callsign: 'Vanguard-1',
-    role: 'Commander / Mission Lead',
-    nationality: 'USA / NASA',
-    age: 44,
-    gender: 'Female',
-    mission: 'Artemis Lunar Transit',
-    is_demo: true,
-    missionDay: 84,
-    totalFlightHours: 4120,
-    evaCount: 4,
-    evaHours: 28.5,
-    status: 'NOMINAL',
-    avatarInitials: 'ER',
-    medicalOfficerNotes:
-      'Nominal physiological adaptation to microgravity. ARED compliance 98%. Resting hemodynamics stable with minimal orthostatic vulnerability. Neurovestibular adaptation complete.',
-    lastExamDate: '2026-11-12',
-    preFlightDeltas: {
-      hrDelta: 2,
-      bpSystolicDelta: -2,
-      bpDiastolicDelta: 1,
-      weightDeltaKg: -0.8,
-      estimatedBoneLossPct: 1.1,
-    },
-    baseline_heart_rate: 64.0,
-    baseline_systolic_bp: 116.0,
-    baseline_diastolic_bp: 74.0,
-    baseline_spo2: 98.4,
-    baseline_temperature: 36.8,
-    baseline_body_temperature: 36.8,
-    baseline_respiration_rate: 14.0,
-    baseline: {
-      restingHeartRate: 64,
-      minHeartRateNominal: 50,
-      maxHeartRateNominal: 90,
-      restingSystolicBP: 116,
-      restingDiastolicBP: 74,
-      baselineSpO2: 98.4,
-      minSpO2Nominal: 95.0,
-      baselineCoreTemp: 36.8,
-      respiratoryRateRange: [12, 16],
-      baselineHrvRmssd: 46,
-    },
-    currentVitals: {
-      astronautId: 'astro_01',
-      timestamp: CURRENT_ISO,
-      heartRate: 66,
-      heartRateVariability: 46,
-      systolicBP: 118,
-      diastolicBP: 75,
-      spo2: 98.2,
-      coreTemp: 36.8,
-      respiratoryRate: 14,
-      status: 'NOMINAL',
-      dataSource: 'SIMULATED TELEMETRY',
-    },
-    trend24h: elenaTrends['24H'],
-    trendsByWindow: elenaTrends,
-    cardiovascular: elenaCardio,
-    musculoskeletal: elenaMusculo,
-    mentalHealth: elenaMental,
-    aiAnalysis: elenaAI,
-  },
-  {
-    id: 'astro_02',
-    name: 'Marcus Vance',
-    callsign: 'Aegis-2',
-    role: 'Flight Engineer / Systems Officer',
-    nationality: 'CAN / CSA',
-    age: 39,
-    gender: 'Male',
-    mission: 'Artemis Lunar Transit',
-    is_demo: true,
-    missionDay: 84,
-    totalFlightHours: 1890,
-    evaCount: 2,
-    evaHours: 19.0,
-    status: 'CAUTION',
-    avatarInitials: 'MV',
-    medicalOfficerNotes:
-      'Exhibiting autonomic cardiac strain post-exercise. HRV suppression (RMSSD 19ms) and compensatory resting tachycardia noted. Fluid redistribution and mild hypovolemia suspected. Oral isotonic hydration protocol active.',
-    lastExamDate: '2026-11-13',
-    preFlightDeltas: {
-      hrDelta: 14,
-      bpSystolicDelta: 12,
-      bpDiastolicDelta: 8,
-      weightDeltaKg: -1.6,
-      estimatedBoneLossPct: 1.8,
-    },
-    baseline_heart_rate: 68.0,
-    baseline_systolic_bp: 120.0,
-    baseline_diastolic_bp: 78.0,
-    baseline_spo2: 98.0,
-    baseline_temperature: 36.9,
-    baseline_body_temperature: 36.9,
-    baseline_respiration_rate: 14.0,
-    baseline: {
-      restingHeartRate: 68,
-      minHeartRateNominal: 52,
-      maxHeartRateNominal: 92,
-      restingSystolicBP: 120,
-      restingDiastolicBP: 78,
-      baselineSpO2: 98.0,
-      minSpO2Nominal: 95.0,
-      baselineCoreTemp: 36.9,
-      respiratoryRateRange: [12, 18],
-      baselineHrvRmssd: 42,
-    },
-    currentVitals: {
-      astronautId: 'astro_02',
-      timestamp: CURRENT_ISO,
-      heartRate: 88,
-      heartRateVariability: 19,
-      systolicBP: 132,
-      diastolicBP: 86,
-      spo2: 96.4,
-      coreTemp: 37.2,
-      respiratoryRate: 18,
-      status: 'CAUTION',
-      dataSource: 'SIMULATED TELEMETRY',
-    },
-    trend24h: marcusTrends['24H'],
-    trendsByWindow: marcusTrends,
-    cardiovascular: marcusCardio,
-    musculoskeletal: marcusMusculo,
-    mentalHealth: marcusMental,
-    aiAnalysis: marcusAI,
-  },
   {
     id: 'astro_03',
     name: 'Major Marcus Chen',
@@ -692,78 +484,13 @@ export const MOCK_ASTRONAUTS: AstronautProfile[] = [
     mentalHealth: marcusChenMental,
     aiAnalysis: marcusChenAI,
   },
-  {
-    id: 'astro_04',
-    name: 'Sarah Lin',
-    callsign: 'Kepler-4',
-    role: 'Payload Specialist / Bio-researcher',
-    nationality: 'USA / NASA',
-    age: 34,
-    gender: 'Female',
-    mission: 'Artemis Lunar Transit',
-    is_demo: true,
-    missionDay: 84,
-    totalFlightHours: 720,
-    evaCount: 1,
-    evaHours: 8.0,
-    status: 'CAUTION',
-    avatarInitials: 'SL',
-    medicalOfficerNotes:
-      'Sub-acute circadian phase misalignment following consecutive night-pass experiment runs. Melatonin suppression suspected from high blue-spectrum workstation exposure. Prescribed light therapy adjustments.',
-    lastExamDate: '2026-11-11',
-    preFlightDeltas: {
-      hrDelta: 6,
-      bpSystolicDelta: 6,
-      bpDiastolicDelta: 4,
-      weightDeltaKg: -1.1,
-      estimatedBoneLossPct: 1.4,
-    },
-    baseline_heart_rate: 62.0,
-    baseline_systolic_bp: 112.0,
-    baseline_diastolic_bp: 70.0,
-    baseline_spo2: 99.0,
-    baseline_temperature: 36.8,
-    baseline_body_temperature: 36.8,
-    baseline_respiration_rate: 14.0,
-    baseline: {
-      restingHeartRate: 62,
-      minHeartRateNominal: 50,
-      maxHeartRateNominal: 88,
-      restingSystolicBP: 112,
-      restingDiastolicBP: 70,
-      baselineSpO2: 99.0,
-      minSpO2Nominal: 95.0,
-      baselineCoreTemp: 36.8,
-      respiratoryRateRange: [12, 16],
-      baselineHrvRmssd: 38,
-    },
-    currentVitals: {
-      astronautId: 'astro_04',
-      timestamp: CURRENT_ISO,
-      heartRate: 74,
-      heartRateVariability: 31,
-      systolicBP: 118,
-      diastolicBP: 76,
-      spo2: 97.5,
-      coreTemp: 37.0,
-      respiratoryRate: 15,
-      status: 'CAUTION',
-      dataSource: 'SIMULATED TELEMETRY',
-    },
-    trend24h: sarahTrends['24H'],
-    trendsByWindow: sarahTrends,
-    cardiovascular: sarahCardio,
-    musculoskeletal: sarahMusculo,
-    mentalHealth: sarahMental,
-    aiAnalysis: sarahAI,
-  },
 ];
 
 export const MOCK_ALERTS: HealthAlert[] = [
   {
     id: 'ALT-001',
-    astronautId: 'astro_02',
-    astronautName: 'Marcus Vance',
+    astronautId: 'astro_03',
+    astronautName: 'Major Marcus Chen',
     category: 'CARDIOVASCULAR',
     severity: 'CAUTION',
     status: 'ACTIVE',
@@ -778,7 +505,7 @@ export const MOCK_ALERTS: HealthAlert[] = [
     evidenceReference: 'NASA Human Research Program (HRP) Cardiovascular Risk Standard & NASA-STD-3001',
     timestamp: '2026-11-14T09:42:00Z',
     acknowledged: false,
-    astronaut_id: 'astro_02',
+    astronaut_id: 'astro_03',
     message: 'Resting RMSSD dropped to 19ms with sustained post-exercise tachycardia (+14 bpm drift).',
     confidence_score: 0.93,
     recommendation: 'Initiate oral isotonic rehydration protocol (1.0 L sodium-electrolyte solution).',
@@ -810,8 +537,8 @@ export const MOCK_ALERTS: HealthAlert[] = [
   },
   {
     id: 'ALT-003',
-    astronautId: 'astro_04',
-    astronautName: 'Sarah Lin',
+    astronautId: 'astro_03',
+    astronautName: 'Major Marcus Chen',
     category: 'SLEEP_PSYCH',
     severity: 'CAUTION',
     status: 'ACKNOWLEDGED',
@@ -826,7 +553,7 @@ export const MOCK_ALERTS: HealthAlert[] = [
     evidenceReference: 'NASA HRP Behavioral Health & Performance (BHP) Circadian Protocol & Ames Sleep Matrix',
     timestamp: '2026-11-14T08:10:00Z',
     acknowledged: true,
-    astronaut_id: 'astro_04',
+    astronaut_id: 'astro_03',
     message: 'Sleep duration constrained to 3.8 hours with 38% sleep fragmentation index.',
     confidence_score: 0.89,
     recommendation: 'Switch workstation display color temperature to 2700K blue-depleted mode.',
@@ -834,8 +561,8 @@ export const MOCK_ALERTS: HealthAlert[] = [
   },
   {
     id: 'ALT-004',
-    astronautId: 'astro_02',
-    astronautName: 'Marcus Vance',
+    astronautId: 'astro_03',
+    astronautName: 'Major Marcus Chen',
     category: 'MUSCULOSKELETAL',
     severity: 'CAUTION',
     status: 'ACTIVE',
@@ -850,7 +577,7 @@ export const MOCK_ALERTS: HealthAlert[] = [
     evidenceReference: 'NASA HRP Renal Stone Risk Stand & Johnson Space Center Nutrition Standards',
     timestamp: '2026-11-13T16:30:00Z',
     acknowledged: false,
-    astronaut_id: 'astro_02',
+    astronaut_id: 'astro_03',
     message: 'Urinary calcium excretion measured at 315 mg/day (baseline < 250 mg/day).',
     confidence_score: 0.88,
     recommendation: 'Increase daily fluid intake to minimum 3.0 L/day to maintain urine dilution.',
@@ -858,8 +585,8 @@ export const MOCK_ALERTS: HealthAlert[] = [
   },
   {
     id: 'ALT-005',
-    astronautId: 'astro_01',
-    astronautName: 'Elena Rostova',
+    astronautId: 'astro_03',
+    astronautName: 'Major Marcus Chen',
     category: 'ENVIRONMENTAL',
     severity: 'INFO',
     status: 'RESOLVED',
@@ -874,7 +601,7 @@ export const MOCK_ALERTS: HealthAlert[] = [
     evidenceReference: 'NASA Environmental Control and Life Support System (ECLSS) Standards',
     timestamp: '2026-11-12T11:00:00Z',
     acknowledged: true,
-    astronaut_id: 'astro_01',
+    astronaut_id: 'astro_03',
     message: 'Node 2 carbon dioxide level transiently rose to 3.2 mmHg during co-located exercise session.',
     confidence_score: 0.95,
     recommendation: 'Life support scrubber cycle increased to high-throughput mode.',
@@ -910,8 +637,8 @@ export const MOCK_MISSION_SUMMARY: MissionSummary = {
   missionName: 'ISS EXPEDITION 75 • DEEP SPACE ANALOG',
   missionElapsedDays: 84,
   totalCrewCount: MOCK_ASTRONAUTS.length,
-  nominalCrewCount: 2,
-  cautionCrewCount: 2,
+  nominalCrewCount: 1,
+  cautionCrewCount: 0,
   alertCrewCount: 0,
   spaceWeatherCondition: 'M1.2 Class Flare / Solar Energetic Proton Wave Active',
   radiationExposureRate: '42.5 μGy/hr (Elevated Storm Shelter Advisory)',
@@ -937,11 +664,7 @@ export function generateHealthReport(
     executiveSummary:
       astronaut.status === 'NOMINAL'
         ? `Astronaut ${astronaut.name} continues to demonstrate superior physiological resilience across all clinical domains. Vital signs, cardiovascular autonomic tone, and musculoskeletal preservation reflect high compliance with prescribed NASA countermeasure regimens. No operational flight constraints indicated.`
-        : `Astronaut ${astronaut.name} is currently flagged under clinical CAUTION surveillance. Primary concerns center on ${
-            astronaut.id === 'ASTRO-02'
-              ? 'autonomic deconditioning (HRV suppression) and mild hypercalciuria.'
-              : 'circadian phase desynchronosis and acute sleep debt from recent workload scheduling.'
-          } Targeted evidence-based countermeasures have been initiated with close telemetry observation.`,
+        : `Astronaut ${astronaut.name} is currently flagged under clinical CAUTION surveillance. Primary concerns center on autonomic deconditioning (HRV suppression) and microgravity adaptation. Targeted evidence-based countermeasures have been initiated with close telemetry observation.`,
     vitalsSummary: {
       avgHeartRate: astronaut.currentVitals.heartRate,
       avgSpo2: astronaut.currentVitals.spo2,
