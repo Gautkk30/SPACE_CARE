@@ -449,7 +449,7 @@ class SpacecareApiService {
       };
     }
 
-    const crewIds = ['astro_01', 'astro_02', 'astro_03', 'astro_04'];
+    const crewIds = ['astro_morgan', 'astro_reynolds', 'astro_carter', 'astro_bennett', 'astro_03'];
     try {
       const allResults = await Promise.all(crewIds.map((id) => this.getAstronautAlerts(id)));
       const anyLive = allResults.some((r) => r.mode === 'LIVE_API');
