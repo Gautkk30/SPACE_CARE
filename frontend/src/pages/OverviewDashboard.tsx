@@ -14,18 +14,6 @@ interface OverviewDashboardProps {
   alerts: HealthAlert[];
   missionSummary?: MissionSummary | null;
 }
-  crew: AstronautProfile[];
-  selectedAstronaut: AstronautProfile;
-  onSelectAstronaut: (id: string) => void;
-  alerts: HealthAlert[];
-  missionSummary?: MissionSummary | null;
-}
-  crew: AstronautProfile[];
-  selectedAstronaut: AstronautProfile;
-  onSelectAstronaut: (id: string) => void;
-  alerts: HealthAlert[];
-  missionSummary: MissionSummary;
-}
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   crew,
@@ -35,7 +23,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   missionSummary,
 }) => {
   // Guard against null/undefined selectedAstronaut.
-  // If no astronaut is selected but crew data exists, default to the first crew member.
   const effectiveAstronaut = selectedAstronaut ?? (crew && crew.length > 0 ? crew[0] : null);
   const selectedAstronautId = effectiveAstronaut ? effectiveAstronaut.id : '';
 
@@ -68,7 +55,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-space-cyan shrink-0" />
           <span>
-            <strong className="text-space-muted">SPACECARE Prototype</strong> &bull; NASA Space Apps Challenge 2026. For spaceflight health monitoring research & demonstration only. Not a certified clinical diagnostic system.
+            <strong className="text-space-muted">SPACECARE Prototype</strong> • NASA Space Apps Challenge 2026. For spaceflight health monitoring research & demonstration only. Not a certified clinical diagnostic system.
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0 font-mono text-[11px] text-space-dim">
