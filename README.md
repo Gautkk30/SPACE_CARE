@@ -41,6 +41,115 @@ Compounding these hazards, deep space transit involves communication latencies o
 
 ---
 
+## Application Screenshots & Feature Walkthrough
+
+Explore the comprehensive visual command suite and aerospace clinical interfaces implemented in SPACECARE:
+
+### 1. Mission Briefing Overlay — Orbital Hero & Telemetry Intro
+The high-impact 60fps landing sequence featuring an interactive mathematical gyroscopic astrolabe, real-time audio/HUD reticle locks, and live telemetry pre-warming. It introduces flight surgeons and mission specialists to the autonomous health management paradigm before transitioning into active monitoring.
+
+![Mission Briefing Overlay — Orbital Hero & Telemetry Intro](docs/screenshots/01_mission_briefing_hero.png)
+
+---
+
+### 2. Mission Briefing — Earth–Mars Latency & Primary Mission Objectives
+Interactive aerospace briefing contrasting the communication latency of deep-space transit (up to 24 minutes one-way delay) against on-board local AI triage (< 12ms inference). It outlines the core architectural pillars: proactive anomaly detection, multi-hazard simulation, and automated clinical countermeasures.
+
+![Mission Briefing — Earth–Mars Latency & Primary Mission Objectives](docs/screenshots/02_mission_briefing_objectives.png)
+
+---
+
+### 3. Mission Overview Dashboard
+The unified flight control overview featuring live mission elapsed time, real-time UTC clock synchronization, active FastAPI backend connection beacons, vital sign KPI cards, and longitudinal 24-hour physiological trend graphs.
+
+![Mission Overview Dashboard](docs/screenshots/03_overview_dashboard.png)
+
+---
+
+### 4. Crew Medical Management Console
+Comprehensive crew medical dossier tracking active astronaut profiles, flight roles, and personalized resting baselines seeded dynamically from SQLite. Enables flight surgeons to review medical histories and inspect individual vital bounds.
+
+![Crew Medical Management Console](docs/screenshots/04_crew_management.png)
+
+---
+
+### 5. Continuous Vital Signs Monitor
+Multi-channel physiological telemetry stream visualizing Heart Rate, Blood Pressure, SpO₂, Core Temperature, and Respiration Rate against strict NASA-STD-3001 clinical safety limits and customizable simulation streams.
+
+![Continuous Vital Signs Monitor](docs/screenshots/05_vital_signs_monitor.png)
+
+---
+
+### 6. Cardiovascular & Hemodynamic Tracker
+Longitudinal assessment of cardiovascular deconditioning, cephalad fluid shift risks, resting heart rate elevations, and orthostatic intolerance probabilities during long-duration microgravity exposure.
+
+![Cardiovascular & Hemodynamic Tracker](docs/screenshots/06_cardiovascular_hemodynamics.png)
+
+---
+
+### 7. Musculoskeletal & Bone Loss Monitor
+Tracks monthly bone mineral density (BMD) demineralization rates across lumbar spine and femoral neck alongside daily countermeasure exercise adherence (ARED resistive and T2 treadmill protocols).
+
+![Musculoskeletal & Bone Loss Monitor](docs/screenshots/07_bone_muscle_bmd.png)
+
+---
+
+### 8. Deep Space Radiation & Live NASA CCMC DONKI CMEs
+Surveillance dashboard tracking cumulative astronaut ionizing radiation dose in millisieverts (mSv) against NASA Career Radiation Limits, integrated with live Coronal Mass Ejection (CME) alerts directly from NASA CCMC DONKI.
+
+![Deep Space Radiation & Live NASA CCMC DONKI CMEs](docs/screenshots/08_radiation_donki.png)
+
+---
+
+### 9. Mental Health, Circadian & Sleep Architecture
+Monitors 7-day actigraphy sleep cycles (REM, Deep, Light, Wake), circadian phase shifting, subjective mood tracking, and NASA Task Load Index (TLX) cognitive fatigue scores for astronaut psychological readiness.
+
+![Mental Health, Circadian & Sleep Architecture](docs/screenshots/09_mental_health_sleep.png)
+
+---
+
+### 10. AI Diagnostics & Isolation Forest Attribution
+Autonomous clinical diagnostic interface driven by Member 3's unsupervised Isolation Forest model, surfacing multivariate anomaly confidence scores, feature attribution radars, and evidence-based clinical countermeasures.
+
+![AI Diagnostics & Isolation Forest Attribution](docs/screenshots/10_ai_anomaly_analysis.png)
+
+---
+
+### 11. Active Warning & Hazard Triage Console
+Prioritized multi-tier clinical alert queue (`CRITICAL`, `WARNING`, `NOMINAL`) equipped with one-click flight-surgeon acknowledgment, resolution workflows, and chronological triage event logging persisted to SQLite.
+
+![Active Warning & Hazard Triage Console](docs/screenshots/11_alerts_triage.png)
+
+---
+
+### 12. Mission Flight Surgeon Health Reports
+Automated clinical dossier generator aggregating individualized astronaut baselines, cumulative environmental exposures, and longitudinal vital summaries for comprehensive flight surgeon debriefs.
+
+![Mission Flight Surgeon Health Reports](docs/screenshots/12_health_reports.png)
+
+---
+
+### 13. Interactive Multi-Hazard Stress Simulator
+High-fidelity spaceflight stressor sandbox allowing medical officers to simulate acute Solar Particle Events (SPE), cabin depressurization, severe hypercapnia/hypoxia, and physical deconditioning with real-time biometric trajectory projections.
+
+![Interactive Multi-Hazard Stress Simulator](docs/screenshots/13_hazard_simulator.png)
+
+---
+
+### 14. Manual Biometric & Health Input Console
+Validated clinical input portal allowing crew members to record manual vital measurements, subjective symptoms, and sleep diary entries with real-time range validation conforming 1-to-1 with backend schemas.
+
+![Manual Biometric & Health Input Console](docs/screenshots/14_manual_health_input.png)
+
+---
+
+### 15. NASA OSDR-946 Microgravity Research Analog QC
+Direct analytical integration with NASA Open Science Data Repository study OSD-946 / GLDS-773, analyzing 44 bed-rest analog samples to evaluate micro-RNA biological adaptations in microgravity with distribution charts and quality-control matrices.
+
+![NASA OSDR-946 Microgravity Research Analog QC](docs/screenshots/15_nasa_osdr_946_research.png)
+
+---
+
 ## 4. Technology Stack
 
 ### Frontend
