@@ -132,7 +132,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold mb-6">Mission Intelligence Preview</h2>
           <p className="text-lg text-space-muted mb-8">A glimpse of the live dashboard powering real‑time astronaut health insights.</p>
           <div className="border border-space-cyan/30 rounded-lg overflow-hidden shadow-lg">
-            <OverviewDashboard crew={[]} selectedAstronaut={null} onSelectAstronaut={() => {}} alerts={[]} missionSummary={null} />
+            <OverviewDashboard crew={[]} selectedAstronaut={null as any} onSelectAstronaut={() => {}} alerts={[]} missionSummary={null as any} />
           </div>
         </div>
       </section>
