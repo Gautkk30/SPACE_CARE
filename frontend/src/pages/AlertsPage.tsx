@@ -45,21 +45,21 @@ export const AlertsPage = ({
     switch (severity) {
       case 'CRITICAL':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-space-red-muted text-space-red border border-space-red/40 animate-pulse">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FC3D21]/15 text-[#FC3D21] border border-[#FC3D21]/40 tabular-nums animate-pulse">
             <ShieldAlert className="w-3.5 h-3.5" />
             CRITICAL
           </span>
         );
       case 'CAUTION':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-space-amber-muted text-space-amber border border-space-amber/40">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40 tabular-nums">
             <AlertTriangle className="w-3.5 h-3.5" />
             CAUTION
           </span>
         );
       case 'INFO':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-space-cyan-muted text-space-cyan border border-space-cyan/40">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/40 tabular-nums">
             <Info className="w-3.5 h-3.5" />
             ADVISORY
           </span>
@@ -71,19 +71,19 @@ export const AlertsPage = ({
     switch (status) {
       case 'ACTIVE':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-space-red-muted/40 text-space-red border border-space-red/30">
+          <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded bg-[#FC3D21]/15 text-[#FC3D21] border border-[#FC3D21]/30">
             ACTIVE
           </span>
         );
       case 'ACKNOWLEDGED':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-space-amber-muted/40 text-space-amber border border-space-amber/30">
+          <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
             ACKNOWLEDGED
           </span>
         );
       case 'RESOLVED':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-space-emerald-muted/40 text-space-emerald border border-space-emerald/30">
+          <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
             RESOLVED
           </span>
         );
@@ -97,29 +97,29 @@ export const AlertsPage = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-space-border/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-space-cyan-muted text-space-cyan border border-space-cyan/30 mb-2">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-[#0B3D91]/25 text-sky-400 border border-[#1A56DB]/40 mb-2 tabular-nums">
             <ShieldAlert className="w-3.5 h-3.5" />
             Clinical Early Warning & Action Dispatcher
           </div>
-          <h1 className="text-2xl font-bold text-space-text">
+          <h1 className="text-2xl font-bold text-white">
             Mission Health Alerts & Action Queue
           </h1>
-          <p className="text-xs text-space-dim mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Prioritized clinical alerts with physiological context and NASA HRP evidence-based countermeasures.
           </p>
         </div>
 
         {/* Counter chips */}
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="px-3 py-1.5 rounded-lg bg-space-red-muted/30 text-space-red border border-space-red/30">
+        <div className="flex items-center gap-2 font-mono text-xs tabular-nums">
+          <span className="px-3 py-1.5 rounded-lg bg-[#FC3D21]/15 text-[#FC3D21] border border-[#FC3D21]/40">
             Active: <strong>{activeCount}</strong>
           </span>
-          <span className="px-3 py-1.5 rounded-lg bg-space-amber-muted/30 text-space-amber border border-space-amber/30">
+          <span className="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
             Ack: <strong>{acknowledgedCount}</strong>
           </span>
-          <span className="px-3 py-1.5 rounded-lg bg-space-emerald-muted/30 text-space-emerald border border-space-emerald/30">
+          <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
             Resolved: <strong>{resolvedCount}</strong>
           </span>
         </div>
@@ -141,21 +141,21 @@ export const AlertsPage = ({
       )}
 
       {/* Filter Bar */}
-      <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col gap-3 text-xs">
+      <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col gap-3 text-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Severity Filters */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-space-dim flex items-center gap-1 mr-1">
-              <Filter className="w-3.5 h-3.5" /> Severity:
+            <span className="text-slate-400 flex items-center gap-1 mr-1 font-mono text-[11px] uppercase tracking-wider">
+              <Filter className="w-3.5 h-3.5 text-sky-400" /> Severity:
             </span>
             {(['ALL', 'CRITICAL', 'CAUTION', 'INFO'] as const).map((sev) => (
               <button
                 key={sev}
                 onClick={() => setSeverityFilter(sev)}
-                className={`px-2.5 py-1 rounded-md transition font-medium ${
+                className={`px-2.5 py-1 rounded-md transition font-medium text-xs font-mono tabular-nums ${
                   severityFilter === sev
-                    ? 'bg-space-cyan-muted text-space-cyan border border-space-cyan/40 font-semibold'
-                    : 'bg-space-bg text-space-muted border border-space-border hover:text-space-text'
+                    ? 'bg-[#0B3D91]/50 text-white border border-[#1A56DB]/60 font-semibold shadow-sm'
+                    : 'bg-black/30 text-slate-400 border border-white/[0.08] hover:text-white'
                 }`}
               >
                 {sev === 'INFO' ? 'ADVISORY' : sev}
@@ -165,15 +165,15 @@ export const AlertsPage = ({
 
           {/* Status Filters */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-space-dim mr-1">Status:</span>
+            <span className="text-slate-400 mr-1 font-mono text-[11px] uppercase tracking-wider">Status:</span>
             {(['ALL', 'ACTIVE', 'ACKNOWLEDGED', 'RESOLVED'] as const).map((st) => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
-                className={`px-2.5 py-1 rounded-md transition font-medium ${
+                className={`px-2.5 py-1 rounded-md transition font-medium text-xs font-mono tabular-nums ${
                   statusFilter === st
-                    ? 'bg-space-cyan-muted text-space-cyan border border-space-cyan/40 font-semibold'
-                    : 'bg-space-bg text-space-muted border border-space-border hover:text-space-text'
+                    ? 'bg-[#0B3D91]/50 text-white border border-[#1A56DB]/60 font-semibold shadow-sm'
+                    : 'bg-black/30 text-slate-400 border border-white/[0.08] hover:text-white'
                 }`}
               >
                 {st}
@@ -183,16 +183,16 @@ export const AlertsPage = ({
         </div>
 
         {/* Category Filters */}
-        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-space-border/50">
-          <span className="text-space-dim mr-1">Category:</span>
+        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-white/[0.08]">
+          <span className="text-slate-400 mr-1 font-mono text-[11px] uppercase tracking-wider">Category:</span>
           {(['ALL', 'CARDIOVASCULAR', 'RADIATION', 'SLEEP_PSYCH', 'MUSCULOSKELETAL', 'ENVIRONMENTAL'] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+              className={`px-2 py-0.5 rounded text-[11px] font-mono transition tabular-nums ${
                 categoryFilter === cat
-                  ? 'bg-space-cyan text-space-bg font-bold'
-                  : 'bg-space-bg text-space-muted border border-space-border hover:text-space-text'
+                  ? 'bg-[#0B3D91] text-white font-bold border border-[#1A56DB]'
+                  : 'bg-black/30 text-slate-400 border border-white/[0.08] hover:text-white'
               }`}
             >
               {cat === 'ALL' ? 'ALL CATEGORIES' : cat}

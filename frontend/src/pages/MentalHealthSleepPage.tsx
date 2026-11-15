@@ -51,20 +51,32 @@ interface CustomTooltipProps {
 
 const DarkSleepTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
+    const totalEntry = payload.find((p) => p.name === 'Total Hours');
+    const totalHours = totalEntry ? totalEntry.value : null;
+    const delta = totalHours !== null && typeof totalHours === 'number' ? Number((totalHours - 8.0).toFixed(1)) : null;
+
     return (
-      <div className="bg-space-panel border border-space-border-light p-3 rounded-lg shadow-2xl text-xs font-mono">
-        <p className="text-space-cyan font-bold mb-1.5">{label}</p>
+      <div className="bg-[#060911]/95 border border-white/15 backdrop-blur-md rounded-lg px-3 py-2 shadow-xl text-xs font-mono tabular-nums">
+        <p className="text-sky-400 font-bold mb-1.5">{label}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-0.5">
-            <span className="text-space-muted flex items-center gap-1.5">
+            <span className="text-slate-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               {entry.name}:
             </span>
-            <span className="font-semibold text-space-text">
-              {entry.value} {entry.name.includes('Sleep') ? 'hrs' : ''}
+            <span className="font-semibold text-white">
+              {entry.value} {entry.name.includes('Sleep') || entry.name.includes('Hours') ? 'hrs' : ''}
             </span>
           </div>
         ))}
+        {delta !== null && (
+          <div className="mt-1 pt-1 border-t border-white/10 flex items-center justify-between gap-4 text-[10px] text-slate-400">
+            <span>Delta vs 8.0h Target:</span>
+            <span className={delta < -1.5 ? 'text-[#FC3D21] font-bold' : delta < 0 ? 'text-amber-400 font-bold' : 'text-emerald-400'}>
+              {delta > 0 ? `+${delta}` : delta} hrs
+            </span>
+          </div>
+        )}
       </div>
     );
   }
@@ -98,6 +110,7 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
   const [sleepNotes, setSleepNotes] = useState<string>('');
   const [isSubmittingSleep, setIsSubmittingSleep] = useState<boolean>(false);
   const [sleepSuccessMsg, setSleepSuccessMsg] = useState<string>('');
+  const [sleepErrorMsg, setSleepErrorMsg] = useState<string>('');
 
   // Behavioral Check-in Form State
   const [formMood, setFormMood] = useState(4);
@@ -208,6 +221,22 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
   // Submit Sleep Log
   const handleSleepSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSleepErrorMsg('');
+    setSleepSuccessMsg('');
+
+    const hours = Number(sleepHours);
+    const numAwakenings = Number(awakenings);
+
+    if (isNaN(hours) || hours < 0 || hours > 24) {
+      setSleepErrorMsg('Validation error: Sleep duration must be a valid number between 0.0 and 24.0 hours.');
+      return;
+    }
+
+    if (isNaN(numAwakenings) || numAwakenings < 0 || numAwakenings > 50) {
+      setSleepErrorMsg('Validation error: Number of awakenings must be between 0 and 50.');
+      return;
+    }
+
     setIsSubmittingSleep(true);
 
     try {
@@ -215,11 +244,11 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
         {
           astronaut_id: selectedCrewId,
           date: new Date().toISOString().split('T')[0],
-          hours_slept: Number(sleepHours),
+          hours_slept: hours,
           sleep_quality: sleepQuality,
-          awakenings: Number(awakenings),
+          awakenings: numAwakenings,
           coupled_to_vitals: applyVitalsCoupling,
-          notes: sleepNotes.trim() || `Sleep log: ${sleepHours}h (${sleepQuality}) logged via onboard workstation.`,
+          notes: sleepNotes.trim() || `Sleep log: ${hours}h (${sleepQuality}) logged via onboard workstation.`,
           data_source: 'SYNTHETIC_SIMULATED',
         },
         applyVitalsCoupling
@@ -227,12 +256,13 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
 
       setSleepSuccessMsg(
         applyVitalsCoupling
-          ? `Sleep log (${sleepHours}h) recorded & propagated to live vitals, cardiovascular indices, and alert stream!`
-          : `Standalone sleep log (${sleepHours}h) recorded to sleep architecture & actigraphy logs.`
+          ? `Sleep log (${hours}h) recorded & propagated to live vitals, cardiovascular indices, and alert stream!`
+          : `Standalone sleep log (${hours}h) recorded to sleep architecture & actigraphy logs.`
       );
       setTimeout(() => setSleepSuccessMsg(''), 5500);
     } catch (err) {
       console.error('Error logging sleep:', err);
+      setSleepErrorMsg(err instanceof Error ? err.message : 'Failed to record sleep log.');
     } finally {
       setIsSubmittingSleep(false);
     }
@@ -274,34 +304,34 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-space-border/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-space-cyan-muted text-space-cyan border border-space-cyan/30 mb-2">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-0.5 rounded bg-[#0B3D91]/25 text-sky-400 border border-[#1A56DB]/40 mb-2 tabular-nums">
             <Brain className="w-3.5 h-3.5" />
             Behavioral Health & Circadian Architecture
           </div>
-          <h1 className="text-2xl font-bold text-space-text flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             Mental Health & Sleep &bull; {activeAstronaut.name}
-            <span className="text-sm font-normal text-space-dim">({activeAstronaut.callsign})</span>
+            <span className="text-sm font-normal text-slate-400 font-mono">({activeAstronaut.callsign})</span>
           </h1>
-          <p className="text-xs text-space-dim mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Dynamic actigraphy sleep staging, circadian phase stability, and coupled neurovegetative vitals regulation.
           </p>
         </div>
 
         {/* Global Stats Badge */}
-        <div className="flex items-center gap-3 bg-space-panel border border-space-border rounded-lg px-3.5 py-2 text-xs font-mono">
-          <Moon className="w-4 h-4 text-space-cyan shrink-0" />
+        <div className="flex items-center gap-3 bg-space-panel border border-white/[0.08] rounded-lg px-3.5 py-2 text-xs font-mono tabular-nums">
+          <Moon className="w-4 h-4 text-sky-400 shrink-0" />
           <div className="flex flex-col">
-            <span className="text-space-dim text-[10px] uppercase">7-Day Sleep Avg</span>
-            <span className="text-space-cyan font-bold">
+            <span className="text-slate-400 text-[10px] uppercase">7-Day Sleep Avg</span>
+            <span className="text-white font-bold">
               {activeAstronaut.mentalHealth.weeklyAvgSleepHours} hrs/night ({activeAstronaut.mentalHealth.weeklyAvgEfficiencyPct}% Eff)
             </span>
           </div>
           {activeAstronaut.mentalHealth.sleepDebtHours !== undefined && (
-            <div className="border-l border-space-border/60 pl-3 flex flex-col">
-              <span className="text-space-dim text-[10px] uppercase">Rolling Debt</span>
-              <span className={`font-bold ${activeAstronaut.mentalHealth.sleepDebtHours > 4.0 ? 'text-space-amber' : 'text-space-emerald'}`}>
+            <div className="border-l border-white/[0.08] pl-3 flex flex-col">
+              <span className="text-slate-400 text-[10px] uppercase">Rolling Debt</span>
+              <span className={`font-bold ${activeAstronaut.mentalHealth.sleepDebtHours > 4.0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {activeAstronaut.mentalHealth.sleepDebtHours} hrs
               </span>
             </div>
@@ -312,21 +342,21 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
       {/* ==============================================================================
        * SECTION 1: INTERACTIVE "LAST NIGHT'S SLEEP LOG" MANUAL WORKSTATION
        * ============================================================================== */}
-      <div className="bg-space-panel border border-space-border-light rounded-xl p-5 shadow-2xl relative overflow-hidden">
+      <div className="bg-space-panel border border-white/[0.08] rounded-xl p-5 shadow-2xl relative overflow-hidden">
         {/* Glow Accent Border */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-space-cyan via-indigo-500 to-space-emerald" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#0B3D91] via-[#1A56DB] to-[#FC3D21]" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-space-border/60 mb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08] mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-space-cyan-muted border border-space-cyan/40 flex items-center justify-center text-space-cyan shadow-inner">
+            <div className="w-10 h-10 rounded-lg bg-[#0B3D91]/30 border border-[#1A56DB]/40 flex items-center justify-center text-sky-300 shadow-inner">
               <BedDouble className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-space-text tracking-wide">
+                <h2 className="text-base font-bold text-white tracking-wide">
                   Log Last Night's Sleep & Circadian Record
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-space-cyan-muted text-space-cyan border border-space-cyan/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono tabular-nums bg-[#0B3D91]/30 text-sky-300 border border-[#1A56DB]/40">
                   REAL-TIME COUPLING
                 </span>
               </div>
@@ -338,7 +368,7 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
 
           {/* Crew Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-space-dim">Astronaut:</span>
+            <span className="text-xs font-mono text-space-dim">Astronaut ({crew.length}):</span>
             <select
               value={selectedCrewId}
               onChange={(e) => {
@@ -361,6 +391,14 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
           <div className="mb-5 bg-space-emerald-muted border border-space-emerald/40 text-space-emerald rounded-lg p-3 text-xs flex items-center gap-2 font-mono animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span className="font-semibold">{sleepSuccessMsg}</span>
+          </div>
+        )}
+
+        {/* Error Alert Banner */}
+        {sleepErrorMsg && (
+          <div className="mb-5 bg-space-red-muted/40 border border-space-red text-space-red rounded-lg p-3 text-xs flex items-center gap-2 font-mono animate-fadeIn">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{sleepErrorMsg}</span>
           </div>
         )}
 
@@ -759,17 +797,17 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
        * ============================================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Circadian Alignment */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-sky-400" />
               Circadian Phase
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 isCircadianSuboptimal
-                  ? 'bg-space-amber-muted text-space-amber border-space-amber/30 animate-pulse'
-                  : 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
               }`}
             >
               {isCircadianSuboptimal ? 'Phase Delay' : 'Synchronized'}
@@ -777,30 +815,30 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-3xl font-bold font-mono ${isCircadianSuboptimal ? 'text-space-amber' : 'text-space-cyan'}`}>
+              <span className={`text-3xl font-bold font-mono tabular-nums ${isCircadianSuboptimal ? 'text-amber-400' : 'text-sky-300'}`}>
                 {activeAstronaut.mentalHealth.currentCircadianAlignment}
               </span>
-              <span className="text-xs text-space-muted">/ 100 Index</span>
+              <span className="text-xs text-slate-400 font-mono">/ 100 Index</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>Target Standard</span>
-              <span className="text-space-text">&ge; 80 Sync</span>
+              <span className="text-slate-300">&ge; 80 Sync</span>
             </div>
           </div>
         </div>
 
         {/* KPI 2: Perceived Stress Index */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Brain className="w-4 h-4 text-space-amber" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Brain className="w-4 h-4 text-amber-400" />
               Perceived Stress
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 isStressElevated
-                  ? 'bg-space-amber-muted text-space-amber border-space-amber/30 animate-pulse'
-                  : 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
               }`}
             >
               {isStressElevated ? 'Elevated (≥6)' : 'Managed'}
@@ -808,32 +846,32 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-3xl font-bold font-mono ${isStressElevated ? 'text-space-amber' : 'text-space-text'}`}>
+              <span className={`text-3xl font-bold font-mono tabular-nums ${isStressElevated ? 'text-amber-400' : 'text-white'}`}>
                 {activeAstronaut.mentalHealth.currentStressIndex}
               </span>
-              <span className="text-xs text-space-muted">/ 10 Scale</span>
+              <span className="text-xs text-slate-400 font-mono">/ 10 Scale</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>Clinical Baseline</span>
-              <span className="text-space-text">&le; 4.0 Normal</span>
+              <span className="text-slate-300">&le; 4.0 Normal</span>
             </div>
           </div>
         </div>
 
         {/* KPI 3: Cognitive Readiness */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-space-emerald" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-emerald-400" />
               Cognitive Readiness
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 readiness < 65
-                  ? 'bg-space-red-muted text-space-red border-space-red/30'
+                  ? 'bg-[#FC3D21]/15 text-[#FC3D21] border-[#FC3D21]/30'
                   : readiness < 80
-                  ? 'bg-space-amber-muted text-space-amber border-space-amber/30'
-                  : 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
               }`}
             >
               {readiness < 65 ? 'Fatigued' : readiness < 80 ? 'Guarded' : 'Optimal'}
@@ -842,46 +880,46 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
           <div>
             <div className="flex items-baseline gap-1.5">
               <span
-                className={`text-3xl font-bold font-mono ${
+                className={`text-3xl font-bold font-mono tabular-nums ${
                   readiness < 65
-                    ? 'text-space-red'
+                    ? 'text-[#FC3D21]'
                     : readiness < 80
-                    ? 'text-space-amber'
-                    : 'text-space-emerald'
+                    ? 'text-amber-400'
+                    : 'text-emerald-400'
                 }`}
               >
                 {readiness}%
               </span>
-              <span className="text-xs text-space-muted">Vigilance</span>
+              <span className="text-xs text-slate-400 font-mono">Vigilance</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>Psychomotor Task</span>
-              <span className="text-space-text">&ge; 85% Required</span>
+              <span className="text-slate-300">&ge; 85% Required</span>
             </div>
           </div>
         </div>
 
         {/* KPI 4: Sleep Efficiency */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between shadow-lg">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Moon className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Moon className="w-4 h-4 text-sky-400" />
               Sleep Efficiency
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-space-cyan-muted text-space-cyan border border-space-cyan/30">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 tabular-nums">
               Actigraphy
             </span>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold font-mono text-space-text">
+              <span className="text-3xl font-bold font-mono tabular-nums text-white">
                 {activeAstronaut.mentalHealth.weeklyAvgEfficiencyPct}%
               </span>
-              <span className="text-xs text-space-muted">Efficiency</span>
+              <span className="text-xs text-slate-400 font-mono">Efficiency</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between font-mono">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between font-mono tabular-nums">
               <span>NASA Standard</span>
-              <span className="text-space-text">&ge; 85% Efficiency</span>
+              <span className="text-slate-300">&ge; 85% Efficiency</span>
             </div>
           </div>
         </div>
@@ -890,8 +928,8 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
       {/* ==============================================================================
        * SECTION 3: 7-DAY SLEEP ARCHITECTURE STACKED BAR CHART
        * ============================================================================== */}
-      <div className="bg-space-panel border border-space-border rounded-xl p-5 shadow-lg space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-space-border/60 gap-2">
+      <div className="bg-space-panel border border-white/[0.08] rounded-xl p-5 shadow-lg space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-white/[0.08] gap-2">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-space-muted flex items-center gap-2">
               <Moon className="w-4 h-4 text-space-cyan" />
@@ -916,15 +954,28 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
               <XAxis dataKey="dayLabel" stroke="#64748B" fontSize={10} tickLine={false} />
               <YAxis stroke="#64748B" fontSize={10} tickLine={false} domain={[0, 12]} />
               <Tooltip content={<DarkSleepTooltip />} />
+              {/* NASA Blue Target */}
               <ReferenceLine
                 y={8.0}
-                stroke="#10B981"
+                stroke="#3B82F6"
                 strokeDasharray="4 4"
                 label={{
-                  value: 'Target Sleep (8.0h)',
-                  fill: '#10B981',
+                  value: 'NASA TARGET (8.0h)',
+                  fill: '#3B82F6',
                   fontSize: 9,
                   position: 'insideTopRight',
+                }}
+              />
+              {/* NASA Vector Red Sleep Deprivation Caution */}
+              <ReferenceLine
+                y={6.0}
+                stroke="#FC3D21"
+                strokeDasharray="4 4"
+                label={{
+                  value: 'DEPRIVATION CAUTION (6.0h)',
+                  fill: '#FC3D21',
+                  fontSize: 9,
+                  position: 'insideBottomRight',
                 }}
               />
               <Bar dataKey="deepSleepHours" name="Deep / SWS Sleep" stackId="sleep" fill="#06B6D4" />
@@ -936,7 +987,20 @@ export const MentalHealthSleepPage: React.FC<MentalHealthSleepPageProps> = ({
                 name="Total Hours"
                 stroke="#F1F5F9"
                 strokeWidth={2}
-                dot={{ r: 3 }}
+                dot={(p) => {
+                  const { cx, cy, index } = p;
+                  const dataLen = activeAstronaut.mentalHealth.sleepArchitecture7d.length;
+                  if (index === dataLen - 1) {
+                    return (
+                      <g key={`edge-dot-sleep-${index}`}>
+                        <circle cx={cx} cy={cy} r={7} fill="#3B82F6" fillOpacity={0.3} />
+                        <circle cx={cx} cy={cy} r={4} fill="#F8FAFC" stroke="#3B82F6" strokeWidth={2} />
+                      </g>
+                    );
+                  }
+                  return <circle key={`dot-sleep-${index}`} cx={cx} cy={cy} r={3} fill="#F1F5F9" />;
+                }}
+                activeDot={{ r: 4 }}
               />
             </ComposedChart>
           </ResponsiveContainer>

@@ -67,9 +67,9 @@ export interface SimulationResponse {
 }
 
 const metaEnv = (import.meta as unknown as { env?: Record<string, string> }).env;
-const API_BASE_URL = metaEnv?.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = metaEnv?.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
-const TIMEOUT_MS = 2000;
+const TIMEOUT_MS = 3000;
 
 class SpacecareApiService {
   private cachedConnectionState: BackendConnectionState | null = null;
@@ -172,7 +172,30 @@ class SpacecareApiService {
       }
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.detail) {
+            if (Array.isArray(errData.detail)) {
+              errorMessage = 'Validation error: ' + errData.detail
+                .map((d: any) => {
+                  const loc = Array.isArray(d.loc)
+                    ? d.loc.filter((p: any) => p !== 'body').join('.')
+                    : (d.loc || '');
+                  const msg = typeof d.msg === 'string' ? d.msg : JSON.stringify(d);
+                  return loc ? `${loc}: ${msg}` : msg;
+                })
+                .join('; ');
+            } else if (typeof errData.detail === 'object') {
+              errorMessage = JSON.stringify(errData.detail);
+            } else {
+              errorMessage = String(errData.detail);
+            }
+          }
+        } catch {
+          // Response body was not JSON or could not be parsed
+        }
+        throw new Error(errorMessage);
       }
 
       const json = await res.json();
@@ -221,21 +244,45 @@ class SpacecareApiService {
       // Merge SQLite attributes with existing rich UI profiles if matching
       const mappedCrew: AstronautProfile[] = res.data.map((dbAstro) => {
         const existing = MOCK_ASTRONAUTS.find((m) => m.id === dbAstro.id) || MOCK_ASTRONAUTS[0];
+        const initials = (dbAstro.name || 'Astronaut')
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
         return {
           ...existing,
           id: dbAstro.id,
           name: dbAstro.name,
+          callsign: existing.id === dbAstro.id ? existing.callsign : `${dbAstro.id.toUpperCase()}`,
           role: dbAstro.role,
           age: dbAstro.age,
           gender: dbAstro.gender,
           mission: dbAstro.mission,
           is_demo: dbAstro.is_demo,
+          avatarInitials: initials,
           baseline_heart_rate: dbAstro.baseline_heart_rate,
           baseline_systolic_bp: dbAstro.baseline_systolic_bp,
           baseline_diastolic_bp: dbAstro.baseline_diastolic_bp,
           baseline_spo2: dbAstro.baseline_spo2,
           baseline_body_temperature: dbAstro.baseline_body_temperature,
           baseline_respiration_rate: dbAstro.baseline_respiration_rate,
+          baseline: {
+            ...existing.baseline,
+            restingHeartRate: dbAstro.baseline_heart_rate ?? existing.baseline?.restingHeartRate ?? 72,
+            minHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) - 15),
+            maxHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) + 18),
+            restingSystolicBP: dbAstro.baseline_systolic_bp ?? existing.baseline?.restingSystolicBP ?? 120,
+            restingDiastolicBP: dbAstro.baseline_diastolic_bp ?? existing.baseline?.restingDiastolicBP ?? 80,
+            baselineSpO2: dbAstro.baseline_spo2 ?? existing.baseline?.baselineSpO2 ?? 98.2,
+            minSpO2Nominal: 95.0,
+            baselineCoreTemp: dbAstro.baseline_body_temperature ?? existing.baseline?.baselineCoreTemp ?? 36.8,
+            respiratoryRateRange: [
+              dbAstro.baseline_respiration_rate ?? existing.baseline?.respiratoryRateRange?.[0] ?? 12,
+              (dbAstro.baseline_respiration_rate ? dbAstro.baseline_respiration_rate + 4 : existing.baseline?.respiratoryRateRange?.[1]) ?? 18,
+            ],
+            baselineHrvRmssd: existing.id === dbAstro.id ? (existing.baseline?.baselineHrvRmssd ?? 44) : 45,
+          },
         };
       });
       return {
@@ -426,12 +473,16 @@ class SpacecareApiService {
       };
     }
 
-    const crewIds = ['astro_01', 'astro_02', 'astro_03', 'astro_04'];
     try {
-      const allResults = await Promise.all(crewIds.map((id) => this.getAstronautAlerts(id)));
+      const astroRes = await this.getAstronauts();
+      const activeCrew = (astroRes.data && Array.isArray(astroRes.data) && astroRes.data.length > 0)
+        ? astroRes.data
+        : [{ id: 'astro_03' }];
+
+      const allResults = await Promise.all(activeCrew.map((c) => this.getAstronautAlerts(c.id)));
       const anyLive = allResults.some((r) => r.mode === 'LIVE_API');
       const mergedAlerts = allResults.flatMap((r) => r.data || []);
-      if (anyLive && mergedAlerts.length > 0) {
+      if (anyLive) {
         return {
           data: mergedAlerts.map((a) => convertAlertResponseToHealthAlert(a, {})),
           mode: 'LIVE_API',

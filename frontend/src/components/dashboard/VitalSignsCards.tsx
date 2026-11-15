@@ -62,14 +62,14 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl lg:text-3xl font-bold font-mono text-space-text">
+              <span className="text-2xl lg:text-3xl font-bold font-mono tabular-nums text-white">
                 {currentVitals.heartRate}
               </span>
-              <span className="text-xs text-space-muted">bpm</span>
+              <span className="text-xs text-slate-400 font-mono">bpm</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between">
               <span>Baseline Range</span>
-              <span className="font-mono text-space-muted">
+              <span className="font-mono tabular-nums text-slate-300">
                 {baseline.minHeartRateNominal}-{baseline.maxHeartRateNominal} bpm
               </span>
             </div>
@@ -77,17 +77,17 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
         </div>
 
         {/* Blood Oxygen (SpO2) */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Activity className="w-4 h-4 text-sky-400" />
               Oxygen Sat (SpO2)
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 spo2Status === 'NOMINAL'
-                  ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
-                  : 'bg-space-amber-muted text-space-amber border-space-amber/30 animate-pulse'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
               }`}
             >
               {spo2Status}
@@ -95,14 +95,14 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl lg:text-3xl font-bold font-mono text-space-text">
+              <span className="text-2xl lg:text-3xl font-bold font-mono tabular-nums text-white">
                 {currentVitals.spo2}
               </span>
-              <span className="text-xs text-space-muted">%</span>
+              <span className="text-xs text-slate-400 font-mono">%</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between">
               <span>Nominal Floor</span>
-              <span className="font-mono text-space-muted">
+              <span className="font-mono tabular-nums text-slate-300">
                 &ge; {baseline.minSpO2Nominal}%
               </span>
             </div>
@@ -110,17 +110,17 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
         </div>
 
         {/* Blood Pressure */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Gauge className="w-4 h-4 text-space-amber" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Gauge className="w-4 h-4 text-amber-400" />
               Blood Pressure
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 bpStatus === 'NOMINAL'
-                  ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
-                  : 'bg-space-amber-muted text-space-amber border-space-amber/30 animate-pulse'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
               }`}
             >
               {bpStatus}
@@ -128,14 +128,14 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl lg:text-3xl font-bold font-mono text-space-text">
+              <span className="text-2xl lg:text-3xl font-bold font-mono tabular-nums text-white">
                 {currentVitals.systolicBP}/{currentVitals.diastolicBP}
               </span>
-              <span className="text-xs text-space-muted">mmHg</span>
+              <span className="text-xs text-slate-400 font-mono">mmHg</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between">
               <span>Resting Baseline</span>
-              <span className="font-mono text-space-muted">
+              <span className="font-mono tabular-nums text-slate-300">
                 {baseline.restingSystolicBP}/{baseline.restingDiastolicBP}
               </span>
             </div>
@@ -143,17 +143,17 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
         </div>
 
         {/* Core Body Temperature */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Thermometer className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Thermometer className="w-4 h-4 text-sky-400" />
               Core Temp
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 tempStatus === 'NOMINAL'
-                  ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
-                  : 'bg-space-amber-muted text-space-amber border-space-amber/30'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
               }`}
             >
               {tempStatus}
@@ -161,14 +161,14 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl lg:text-3xl font-bold font-mono text-space-text">
+              <span className="text-2xl lg:text-3xl font-bold font-mono tabular-nums text-white">
                 {currentVitals.coreTemp}
               </span>
-              <span className="text-xs text-space-muted">&deg;C</span>
+              <span className="text-xs text-slate-400 font-mono">&deg;C</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between">
               <span>Resting Baseline</span>
-              <span className="font-mono text-space-muted">
+              <span className="font-mono tabular-nums text-slate-300">
                 {baseline.baselineCoreTemp}&deg;C
               </span>
             </div>
@@ -176,17 +176,17 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
         </div>
 
         {/* Respiratory Rate */}
-        <div className="bg-space-panel border border-space-border rounded-xl p-4 flex flex-col justify-between col-span-2 md:col-span-1">
+        <div className="bg-space-panel border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between col-span-2 md:col-span-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-space-dim uppercase tracking-wider font-medium flex items-center gap-1.5">
-              <Wind className="w-4 h-4 text-space-cyan" />
+            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Wind className="w-4 h-4 text-sky-400" />
               Respiration
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border tabular-nums ${
                 respStatus === 'NOMINAL'
-                  ? 'bg-space-emerald-muted text-space-emerald border-space-emerald/30'
-                  : 'bg-space-amber-muted text-space-amber border-space-amber/30'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
               }`}
             >
               {respStatus}
@@ -194,14 +194,14 @@ export const VitalSignsCards: React.FC<VitalSignsCardsProps> = ({ astronaut }) =
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl lg:text-3xl font-bold font-mono text-space-text">
+              <span className="text-2xl lg:text-3xl font-bold font-mono tabular-nums text-white">
                 {currentVitals.respiratoryRate}
               </span>
-              <span className="text-xs text-space-muted">br/min</span>
+              <span className="text-xs text-slate-400 font-mono">br/min</span>
             </div>
-            <div className="mt-2 pt-2 border-t border-space-border/60 text-[11px] text-space-dim flex justify-between">
+            <div className="mt-2 pt-2 border-t border-white/[0.08] text-[11px] text-slate-400 flex justify-between">
               <span>Normal Range</span>
-              <span className="font-mono text-space-muted">
+              <span className="font-mono tabular-nums text-slate-300">
                 {baseline.respiratoryRateRange[0]}-{baseline.respiratoryRateRange[1]}
               </span>
             </div>

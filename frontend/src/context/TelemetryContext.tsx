@@ -27,7 +27,6 @@ import {
   SleepArchitectureDay,
   BehavioralCheckIn,
   AssessmentSummaryResponse,
-  convertAlertResponseToHealthAlert,
 } from '../types/spacecare';
 import {
   MOCK_ASTRONAUTS,
@@ -38,6 +37,7 @@ import { spacecareApi, ConnectionMode } from '../services/api';
 
 interface TelemetryContextValue {
   crew: AstronautProfile[];
+  astronauts: AstronautProfile[];
   selectedAstronautId: string;
   setSelectedAstronautId: (id: string) => void;
   selectedAstronaut: AstronautProfile;
@@ -91,6 +91,7 @@ function initializeTelemetryFromMock(astronauts: AstronautProfile[]): Record<str
 }
 
 export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const isSubmittingRef = React.useRef(false);
   const [crewProfiles, setCrewProfiles] = useState<AstronautProfile[]>(MOCK_ASTRONAUTS);
   const [selectedAstronautId, setSelectedAstronautId] = useState<string>(MOCK_ASTRONAUTS[0].id);
   const [alerts, setAlerts] = useState<HealthAlert[]>(MOCK_ALERTS);
@@ -113,6 +114,8 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     let isMounted = true;
 
     const syncWithBackend = async () => {
+      if (isSubmittingRef.current) return;
+
       try {
         const probeRes = await spacecareApi.probeConnection();
         if (!isMounted) return;
@@ -122,39 +125,92 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
           // 1. Fetch live astronauts from GET /api/v1/astronauts
           const astroRes = await spacecareApi.getAstronauts();
           if (astroRes.data && Array.isArray(astroRes.data) && astroRes.data.length > 0) {
-            setCrewProfiles((prev) =>
-              prev.map((p) => {
-                const dbMatch = astroRes.data.find((a) => a.id === p.id);
-                if (dbMatch) {
-                  return {
-                    ...p,
-                    baseline_heart_rate: dbMatch.baseline_heart_rate,
-                    baseline_systolic_bp: dbMatch.baseline_systolic_bp,
-                    baseline_diastolic_bp: dbMatch.baseline_diastolic_bp,
-                    baseline_spo2: dbMatch.baseline_spo2,
-                    baseline_body_temperature: dbMatch.baseline_body_temperature,
-                    baseline_respiration_rate: dbMatch.baseline_respiration_rate,
-                  };
-                }
-                return p;
-              })
-            );
+            const dbAstroIds = new Set(astroRes.data.map((a) => a.id));
+
+            // Keep only astronauts persisted in the live SQLite database
+            const liveProfiles: AstronautProfile[] = astroRes.data.map((dbAstro) => {
+              const existing = MOCK_ASTRONAUTS.find((p) => p.id === dbAstro.id) || MOCK_ASTRONAUTS[0];
+              const initials = (dbAstro.name || 'Astronaut')
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
+              return {
+                ...existing,
+                id: dbAstro.id,
+                name: dbAstro.name,
+                callsign: existing.id === dbAstro.id ? existing.callsign : `${dbAstro.id.toUpperCase()}`,
+                role: dbAstro.role,
+                age: dbAstro.age,
+                gender: dbAstro.gender,
+                mission: dbAstro.mission,
+                is_demo: dbAstro.is_demo,
+                avatarInitials: initials,
+                baseline_heart_rate: dbAstro.baseline_heart_rate,
+                baseline_systolic_bp: dbAstro.baseline_systolic_bp,
+                baseline_diastolic_bp: dbAstro.baseline_diastolic_bp,
+                baseline_spo2: dbAstro.baseline_spo2,
+                baseline_body_temperature: dbAstro.baseline_body_temperature,
+                baseline_respiration_rate: dbAstro.baseline_respiration_rate,
+                baseline: {
+                  ...existing.baseline,
+                  restingHeartRate: dbAstro.baseline_heart_rate ?? existing.baseline?.restingHeartRate ?? 72,
+                  minHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) - 15),
+                  maxHeartRateNominal: Math.round((dbAstro.baseline_heart_rate ?? 72) + 18),
+                  restingSystolicBP: dbAstro.baseline_systolic_bp ?? existing.baseline?.restingSystolicBP ?? 120,
+                  restingDiastolicBP: dbAstro.baseline_diastolic_bp ?? existing.baseline?.restingDiastolicBP ?? 80,
+                  baselineSpO2: dbAstro.baseline_spo2 ?? existing.baseline?.baselineSpO2 ?? 98.2,
+                  minSpO2Nominal: 95.0,
+                  baselineCoreTemp: dbAstro.baseline_body_temperature ?? existing.baseline?.baselineCoreTemp ?? 36.8,
+                  respiratoryRateRange: [
+                    dbAstro.baseline_respiration_rate ?? existing.baseline?.respiratoryRateRange?.[0] ?? 12,
+                    (dbAstro.baseline_respiration_rate ? dbAstro.baseline_respiration_rate + 4 : existing.baseline?.respiratoryRateRange?.[1]) ?? 18,
+                  ],
+                  baselineHrvRmssd: existing.id === dbAstro.id ? (existing.baseline?.baselineHrvRmssd ?? 44) : 45,
+                },
+              };
+            });
+
+            setCrewProfiles(liveProfiles);
+
+            setSelectedAstronautId((currentId) => {
+              if (dbAstroIds.has(currentId)) return currentId;
+              return astroRes.data[0].id;
+            });
           }
 
           // 2. Fetch live alerts from SQLite
           const alertRes = await spacecareApi.getAlerts();
-          if (alertRes.data && Array.isArray(alertRes.data) && alertRes.data.length > 0) {
-            setAlerts(alertRes.data);
+          if (alertRes.data && Array.isArray(alertRes.data)) {
+            setAlerts((prev) => {
+              const clientSleepAlerts = prev.filter((a) => a.id.startsWith('ALT-SLEEP-'));
+              const seen = new Set<string>();
+              const combined: HealthAlert[] = [];
+              for (const a of [...alertRes.data, ...clientSleepAlerts]) {
+                if (!seen.has(a.id)) {
+                  seen.add(a.id);
+                  combined.push(a);
+                }
+              }
+              return combined;
+            });
           }
 
-          // 3. Fetch recent telemetry for the active astronaut
+          // 3. Fetch recent telemetry for the active astronaut (sorted chronologically ASC for Recharts)
           const teleRes = await spacecareApi.getAstronautTelemetry(selectedAstronautId, 50);
           if (teleRes.data && Array.isArray(teleRes.data) && teleRes.data.length > 0) {
+            const sortedTelemetry = [...(teleRes.data as unknown as TelemetryReading[])].sort(
+              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
             setTelemetryHistory((prev) => ({
               ...prev,
-              [selectedAstronautId]: teleRes.data as unknown as TelemetryReading[],
+              [selectedAstronautId]: sortedTelemetry,
             }));
           }
+        } else {
+          // In offline fallback mode, restore full mock crew
+          setCrewProfiles(MOCK_ASTRONAUTS);
         }
       } catch (err) {
         console.warn('Backend sync failed, maintaining offline state:', err);
@@ -194,139 +250,161 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const recordTelemetryReading = async (
     rawReading: Omit<TelemetryReading, 'id'> | TelemetryReading
   ): Promise<TelemetryReading> => {
-    let savedReading: TelemetryReading = {
-      id: 'id' in rawReading ? rawReading.id : Date.now(),
-      ...rawReading,
-    };
+    isSubmittingRef.current = true;
+    try {
+      const parsedDate = rawReading.timestamp ? new Date(rawReading.timestamp) : new Date();
+      const isoTimestamp = !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : new Date().toISOString();
 
-    const targetAstronautId = savedReading.astronaut_id;
+      let savedReading: TelemetryReading = {
+        id: 'id' in rawReading ? rawReading.id : Date.now(),
+        ...rawReading,
+        timestamp: isoTimestamp,
+      };
 
-    // If live API, dispatch to FastAPI/SQLite
-    if (backendMode === 'LIVE_API') {
-      try {
-        const res = await spacecareApi.submitTelemetryReading(rawReading);
-        if (res.data && res.data.telemetry) {
-          savedReading = {
-            id: res.data.telemetry.id,
-            astronaut_id: res.data.telemetry.astronaut_id,
-            timestamp: res.data.telemetry.timestamp,
-            heart_rate: res.data.telemetry.heart_rate,
-            systolic_bp: res.data.telemetry.systolic_bp,
-            diastolic_bp: res.data.telemetry.diastolic_bp,
-            spo2: res.data.telemetry.spo2,
-            body_temperature: res.data.telemetry.body_temperature,
-            respiration_rate: res.data.telemetry.respiration_rate,
-            data_source: res.data.telemetry.data_source as any,
-            is_simulated: res.data.telemetry.is_simulated,
-            dataset_reference: res.data.telemetry.dataset_reference,
+      const targetAstronautId = savedReading.astronaut_id;
+
+      // If live API, dispatch to FastAPI/SQLite
+      if (backendMode === 'LIVE_API') {
+        try {
+          const res = await spacecareApi.submitTelemetryReading(rawReading);
+          if (res.data && res.data.telemetry) {
+            savedReading = {
+              id: res.data.telemetry.id,
+              astronaut_id: res.data.telemetry.astronaut_id,
+              timestamp: res.data.telemetry.timestamp,
+              heart_rate: res.data.telemetry.heart_rate,
+              systolic_bp: res.data.telemetry.systolic_bp,
+              diastolic_bp: res.data.telemetry.diastolic_bp,
+              spo2: res.data.telemetry.spo2,
+              body_temperature: res.data.telemetry.body_temperature,
+              respiration_rate: res.data.telemetry.respiration_rate,
+              data_source: res.data.telemetry.data_source as any,
+              is_simulated: res.data.telemetry.is_simulated,
+              dataset_reference: res.data.telemetry.dataset_reference,
+            };
+
+            // Store live assessment summary
+            if (res.data.assessment_summary) {
+              setLatestAssessmentByAstronaut((prev) => ({
+                ...prev,
+                [targetAstronautId]: res.data.assessment_summary,
+              }));
+            }
+
+            // Refresh live SQLite alerts (FastAPI is authoritative)
+            try {
+              const alertRes = await spacecareApi.getAlerts();
+              if (alertRes.data && Array.isArray(alertRes.data)) {
+                setAlerts((prev) => {
+                  const clientSleepAlerts = prev.filter((a) => a.id.startsWith('ALT-SLEEP-'));
+                  const seen = new Set<string>();
+                  const combined: HealthAlert[] = [];
+                  for (const a of [...alertRes.data, ...clientSleepAlerts]) {
+                    if (!seen.has(a.id)) {
+                      seen.add(a.id);
+                      combined.push(a);
+                    }
+                  }
+                  return combined;
+                });
+              }
+            } catch (e) {
+              console.warn('Failed to refresh live alerts:', e);
+            }
+          }
+        } catch (err) {
+          console.warn('Backend telemetry post failed, staging in memory:', err);
+        }
+      }
+
+      // 1. Append reading to telemetryHistory immediately (sorted chronologically ASC)
+      setTelemetryHistory((prev) => {
+        const existing = prev[targetAstronautId] || [];
+        const updated = [...existing, savedReading].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        return {
+          ...prev,
+          [targetAstronautId]: updated,
+        };
+      });
+
+      // 2. Evaluate against SQLite baseline & trigger rule-engine alert ONLY when in OFFLINE mode
+      // When LIVE_API is active, backend SQLite alert engine is authoritative to prevent duplicate alerts
+      if (backendMode !== 'LIVE_API') {
+        const targetAstro = crewProfiles.find((c) => c.id === targetAstronautId) || crewProfiles[0];
+        const baseHr = targetAstro.baseline_heart_rate ?? targetAstro.baseline?.restingHeartRate ?? 72;
+        const baseSpo2 = targetAstro.baseline_spo2 ?? targetAstro.baseline?.baselineSpO2 ?? 98.2;
+        const baseTemp = targetAstro.baseline_body_temperature ?? targetAstro.baseline?.baselineCoreTemp ?? 36.8;
+        const baseSys = targetAstro.baseline_systolic_bp ?? targetAstro.baseline?.restingSystolicBP ?? 120;
+
+        const isTachycardia = savedReading.heart_rate >= 100;
+        const isBradycardia = savedReading.heart_rate < 50;
+        const isHypoxia = savedReading.spo2 < 94.0;
+        const isThermalStrain = savedReading.body_temperature >= 37.8;
+        const isHypotension = savedReading.systolic_bp < 95;
+
+        if (isTachycardia || isBradycardia || isHypoxia || isThermalStrain || isHypotension) {
+          const category = isHypoxia ? 'RESPIRATORY' : isThermalStrain ? 'ENVIRONMENTAL' : 'CARDIOVASCULAR';
+          const severity = (savedReading.spo2 < 90 || savedReading.heart_rate > 130 || savedReading.body_temperature >= 38.5)
+            ? 'CRITICAL'
+            : 'CAUTION';
+
+          const alertTitle = isHypoxia
+            ? `Hypoxia Alert: SpO2 ${savedReading.spo2}%`
+            : isThermalStrain
+            ? `Thermal Strain Alert: Core Temp ${savedReading.body_temperature}°C`
+            : isTachycardia
+            ? `Tachycardia Alert: Heart Rate ${savedReading.heart_rate} bpm`
+            : `Cardiovascular Deconditioning: BP ${savedReading.systolic_bp}/${savedReading.diastolic_bp} mmHg`;
+
+          const observation = isHypoxia
+            ? `Oxygen saturation dropped to ${savedReading.spo2}% (baseline ${baseSpo2}%). Ventilatory rate at ${savedReading.respiration_rate} br/m.`
+            : isThermalStrain
+            ? `Core temperature reached ${savedReading.body_temperature}°C (baseline ${baseTemp}°C) with heart rate ${savedReading.heart_rate} bpm.`
+            : isTachycardia
+            ? `Heart rate spiked to ${savedReading.heart_rate} bpm (baseline ${baseHr} bpm, delta +${savedReading.heart_rate - baseHr} bpm).`
+            : `Systolic arterial pressure decreased to ${savedReading.systolic_bp} mmHg (baseline ${baseSys} mmHg).`;
+
+          const recommendation = isHypoxia
+            ? 'NASA-STD-3001 §6.1: Verify ECLSS cabin partial O2 pressure and inspect portable emergency mask.'
+            : isThermalStrain
+            ? 'NASA-STD-3001 §7.3: Increase suit LCVG chiller bypass valve flow; oral electrolyte hydration.'
+            : isTachycardia
+            ? 'NASA-STD-3001 §6.2: Rest in horizontal microgravity neutral posture; administer 500mL fluid load.'
+            : 'NASA-STD-3001 §6.2: Initiate 1.0L oral isotonic fluid loading; don lower body compression garment.';
+
+          const newAlert: HealthAlert = {
+            id: `ALT-RULE-${Date.now()}`,
+            astronautId: targetAstronautId,
+            astronautName: targetAstro.name,
+            category: category as any,
+            severity: severity as any,
+            status: 'ACTIVE',
+            title: alertTitle,
+            whatIsChanging: observation,
+            whyItMatters: 'Biometric threshold crossed personal NASA HRP baseline limits in microgravity.',
+            physiologicalExplanation: observation,
+            countermeasure: recommendation,
+            suggestedFurtherAssessment: 'Check secondary diagnostic monitors and contact flight surgeon.',
+            evidenceReference: 'NASA Human Research Program (HRP) Standards & NASA-STD-3001',
+            timestamp: savedReading.timestamp,
+            acknowledged: false,
+            astronaut_id: targetAstronautId,
+            message: observation,
+            confidence_score: 0.95,
+            recommendation,
+            is_acknowledged: false,
           };
 
-          // Store live assessment summary
-          if (res.data.assessment_summary) {
-            setLatestAssessmentByAstronaut((prev) => ({
-              ...prev,
-              [targetAstronautId]: res.data.assessment_summary,
-            }));
-          }
-
-          // Fetch refreshed SQLite alerts
-          try {
-            const alertRes = await spacecareApi.getAstronautAlerts(targetAstronautId);
-            if (alertRes.data && Array.isArray(alertRes.data) && alertRes.data.length > 0) {
-              const liveAlerts = alertRes.data.map((a) => convertAlertResponseToHealthAlert(a, {}));
-              setAlerts((prev) => {
-                const otherAlerts = prev.filter((a) => a.astronautId !== targetAstronautId);
-                return [...liveAlerts, ...otherAlerts];
-              });
-            }
-          } catch (e) {
-            console.warn('Failed to refresh live alerts:', e);
-          }
+          setAlerts((prev) => [newAlert, ...prev]);
         }
-      } catch (err) {
-        console.warn('Backend telemetry post failed, staging in memory:', err);
       }
+
+      return savedReading;
+    } finally {
+      isSubmittingRef.current = false;
     }
-
-    // 1. Append reading to telemetryHistory immediately
-    setTelemetryHistory((prev) => {
-      const existing = prev[targetAstronautId] || [];
-      return {
-        ...prev,
-        [targetAstronautId]: [...existing, savedReading],
-      };
-    });
-
-    // 2. Evaluate against SQLite baseline & trigger rule-engine alert if necessary
-    const targetAstro = crewProfiles.find((c) => c.id === targetAstronautId) || crewProfiles[0];
-    const baseHr = targetAstro.baseline_heart_rate ?? targetAstro.baseline.restingHeartRate ?? 72;
-    const baseSpo2 = targetAstro.baseline_spo2 ?? targetAstro.baseline.baselineSpO2 ?? 98.2;
-    const baseTemp = targetAstro.baseline_body_temperature ?? targetAstro.baseline.baselineCoreTemp ?? 36.8;
-    const baseSys = targetAstro.baseline_systolic_bp ?? targetAstro.baseline.restingSystolicBP ?? 120;
-
-    const isTachycardia = savedReading.heart_rate >= 100;
-    const isBradycardia = savedReading.heart_rate < 50;
-    const isHypoxia = savedReading.spo2 < 94.0;
-    const isThermalStrain = savedReading.body_temperature >= 37.8;
-    const isHypotension = savedReading.systolic_bp < 95;
-
-    if (isTachycardia || isBradycardia || isHypoxia || isThermalStrain || isHypotension) {
-      const category = isHypoxia ? 'RESPIRATORY' : isThermalStrain ? 'ENVIRONMENTAL' : 'CARDIOVASCULAR';
-      const severity = (savedReading.spo2 < 90 || savedReading.heart_rate > 130 || savedReading.body_temperature >= 38.5)
-        ? 'CRITICAL'
-        : 'CAUTION';
-
-      const alertTitle = isHypoxia
-        ? `Hypoxia Alert: SpO2 ${savedReading.spo2}%`
-        : isThermalStrain
-        ? `Thermal Strain Alert: Core Temp ${savedReading.body_temperature}°C`
-        : isTachycardia
-        ? `Tachycardia Alert: Heart Rate ${savedReading.heart_rate} bpm`
-        : `Cardiovascular Deconditioning: BP ${savedReading.systolic_bp}/${savedReading.diastolic_bp} mmHg`;
-
-      const observation = isHypoxia
-        ? `Oxygen saturation dropped to ${savedReading.spo2}% (baseline ${baseSpo2}%). Ventilatory rate at ${savedReading.respiration_rate} br/m.`
-        : isThermalStrain
-        ? `Core temperature reached ${savedReading.body_temperature}°C (baseline ${baseTemp}°C) with heart rate ${savedReading.heart_rate} bpm.`
-        : isTachycardia
-        ? `Heart rate spiked to ${savedReading.heart_rate} bpm (baseline ${baseHr} bpm, delta +${savedReading.heart_rate - baseHr} bpm).`
-        : `Systolic arterial pressure decreased to ${savedReading.systolic_bp} mmHg (baseline ${baseSys} mmHg).`;
-
-      const recommendation = isHypoxia
-        ? 'NASA-STD-3001 §6.1: Verify ECLSS cabin partial O2 pressure and inspect portable emergency mask.'
-        : isThermalStrain
-        ? 'NASA-STD-3001 §7.3: Increase suit LCVG chiller bypass valve flow; oral electrolyte hydration.'
-        : isTachycardia
-        ? 'NASA-STD-3001 §6.2: Rest in horizontal microgravity neutral posture; administer 500mL fluid load.'
-        : 'NASA-STD-3001 §6.2: Initiate 1.0L oral isotonic fluid loading; don lower body compression garment.';
-
-      const newAlert: HealthAlert = {
-        id: `ALT-RULE-${Date.now()}`,
-        astronautId: targetAstronautId,
-        astronautName: targetAstro.name,
-        category: category as any,
-        severity: severity as any,
-        status: 'ACTIVE',
-        title: alertTitle,
-        whatIsChanging: observation,
-        whyItMatters: 'Biometric threshold crossed personal NASA HRP baseline limits in microgravity.',
-        physiologicalExplanation: observation,
-        countermeasure: recommendation,
-        suggestedFurtherAssessment: 'Check secondary diagnostic monitors and contact flight surgeon.',
-        evidenceReference: 'NASA Human Research Program (HRP) Standards & NASA-STD-3001',
-        timestamp: savedReading.timestamp,
-        acknowledged: false,
-        astronaut_id: targetAstronautId,
-        message: observation,
-        confidence_score: 0.95,
-        recommendation,
-        is_acknowledged: false,
-      };
-
-      setAlerts((prev) => [newAlert, ...prev]);
-    }
-
-    return savedReading;
   };
 
   // Action: Log Astronaut Sleep & Dynamically Propagate Telemetry
@@ -334,7 +412,9 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     entryInput: Omit<SleepLogEntry, 'id'> | SleepLogEntry,
     applyPhysiologicalEffect: boolean = true
   ): Promise<void> => {
-    const targetAstronautId = entryInput.astronaut_id;
+    isSubmittingRef.current = true;
+    try {
+      const targetAstronautId = entryInput.astronaut_id;
     const targetAstro = crewProfiles.find((c) => c.id === targetAstronautId) || crewProfiles[0];
     const currentMental = mentalHealthByAstronaut[targetAstronautId] || targetAstro.mentalHealth;
     const hours = entryInput.hours_slept;
@@ -568,7 +648,10 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         setAlerts((prev) => [newAlert, ...prev]);
       }
     }
-  };
+  } finally {
+    isSubmittingRef.current = false;
+  }
+};
 
   // Recompute enriched crew profiles with dynamic latest biometrics, deltas, and trend points
   const enrichedCrew = useMemo(() => {
@@ -773,6 +856,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const selectedAstronaut = useMemo(() => {
     return (
       enrichedCrew.find((c) => c.id === selectedAstronautId) ||
+      enrichedCrew.find((c) => c.id === 'astro_morgan') ||
       enrichedCrew.find((c) => c.id === 'astro_03') ||
       enrichedCrew[0]
     );
@@ -795,6 +879,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return {
       ...MOCK_MISSION_SUMMARY,
+      totalCrewCount: enrichedCrew.length,
       nominalCrewCount: nominalCount,
       cautionCrewCount: cautionCount,
       alertCrewCount: alertCount,
@@ -806,6 +891,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
     <TelemetryContext.Provider
       value={{
         crew: enrichedCrew,
+        astronauts: enrichedCrew,
         selectedAstronautId,
         setSelectedAstronautId,
         selectedAstronaut,
