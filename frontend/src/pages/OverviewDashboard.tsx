@@ -22,6 +22,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   alerts,
   missionSummary,
 }) => {
+  // Guard against null/undefined selectedAstronaut.
+  // If no astronaut is selected but crew data exists, default to the first crew member.
+  const effectiveAstronaut = selectedAstronaut ?? (crew && crew.length > 0 ? crew[0] : null);
+  const selectedAstronautId = effectiveAstronaut ? effectiveAstronaut.id : '';
+
   return (
     <div className="space-y-6">
       {/* Top Mission Metrics Strip */}
@@ -33,15 +38,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* Crew Overview Grid */}
       <CrewOverviewCards
         crew={crew}
-        selectedAstronautId={selectedAstronaut.id}
+        selectedAstronautId={selectedAstronautId}
         onSelectAstronaut={onSelectAstronaut}
       />
 
       {/* Selected Astronaut Biometrics Row */}
-      <VitalSignsCards astronaut={selectedAstronaut} />
+      {effectiveAstronaut && <VitalSignsCards astronaut={effectiveAstronaut} />}
 
       {/* 24-Hour Trends Chart */}
-      <VitalTrendCharts astronaut={selectedAstronaut} />
+      {effectiveAstronaut && <VitalTrendCharts astronaut={effectiveAstronaut} />}
 
       {/* Early Warning Alerts Queue */}
       <RecentAlertsPanel alerts={alerts} />
