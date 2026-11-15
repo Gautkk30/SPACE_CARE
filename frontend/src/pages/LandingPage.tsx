@@ -347,7 +347,58 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* About / Meet Our Team Section */}
+      {/* About / About SPACECARE Section */}
+      <section id="about" className="py-20 bg-space-bg/90">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">ABOUT SPACECARE</h2>
+          <h3 className="text-2xl font-semibold mb-4 text-space-cyan">BUILT BY EXPLORERS. DESIGNED FOR THE FUTURE.</h3>
+          <p className="text-lg text-space-muted mb-8 max-w-3xl mx-auto">
+            SPACECARE is a space‑health intelligence prototype developed for the NASA Space Apps Challenge 2026. Our goal is to bring together NASA research, space‑weather information, environmental data and machine‑learning‑based anomaly awareness into one unified platform.
+            <br/><br/>
+            We believe that protecting astronaut health is an essential part of making future space exploration safer and more sustainable.
+          </p>
+          <h4 className="text-xl font-bold mb-4 text-space-cyan">TEAM CEACS</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Team Member 1 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Beegum S. Rahmath</h3>
+              </div>
+            </div>
+            {/* Team Member 2 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Abhirami Anil</h3>
+              </div>
+            </div>
+            {/* Team Member 3 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Gautham K. K.</h3>
+              </div>
+            </div>
+            {/* Team Member 4 */}
+            <div className="nasa-card p-6 hover:shadow-lg transition transform hover:-translate-y-1">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-space-cyan/20 flex items-center justify-center mb-4">
+                  <User2 className="w-8 h-8 text-space-cyan" />
+                </div>
+                <h3 className="font-semibold">Aadil Regi Hussain</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="about" className="py-20 bg-space-bg/90">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Meet CEACS</h2>
