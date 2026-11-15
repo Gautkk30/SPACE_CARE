@@ -51,11 +51,7 @@ export const CrewOverviewCards: React.FC<CrewOverviewCardsProps> = ({
         </span>
       </div>
 
-<<<<<<< HEAD
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
-=======
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${crew.length <= 2 ? 'lg:grid-cols-2' : crew.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3.5`}>
->>>>>>> eed098172fca490e8d5cc1e252f298bcbfc0e590
         {crew.map((member) => {
           const isSelected = member.id === selectedAstronautId;
 
@@ -82,9 +78,8 @@ export const CrewOverviewCards: React.FC<CrewOverviewCardsProps> = ({
                     {member.avatarInitials}
                   </div>
                   <div>
-<<<<<<< HEAD
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="text-sm font-semibold text-space-text leading-tight">
+                      <h3 className="text-sm font-semibold text-white leading-tight">
                         {member.name}
                       </h3>
                       {member.is_demo && (
@@ -96,13 +91,7 @@ export const CrewOverviewCards: React.FC<CrewOverviewCardsProps> = ({
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-space-dim font-mono">
-=======
-                    <h3 className="text-sm font-semibold text-white leading-tight">
-                      {member.name}
-                    </h3>
                     <p className="text-[11px] text-slate-400 font-mono tabular-nums">
->>>>>>> eed098172fca490e8d5cc1e252f298bcbfc0e590
                       {member.callsign} &bull; {member.id}
                     </p>
                   </div>
